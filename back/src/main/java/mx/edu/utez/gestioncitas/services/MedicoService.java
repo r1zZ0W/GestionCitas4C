@@ -2,12 +2,12 @@ package mx.edu.utez.gestioncitas.services;
 
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
 import mx.edu.utez.gestioncitas.model.Medico;
-import mx.edu.utez.gestioncitas.model.Paciente;
+import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class MedicoService {
 
     ListaSimple<Medico> listaMedicos = new ListaSimple<>();
@@ -17,7 +17,11 @@ public class MedicoService {
 
         Medico m = new Medico();
 
-
+        m.setId(1);
+        m.setNombre("Dr. Pedro");
+        m.setApellido("Gomez");
+        m.setEspecialidad("Medicina General");
+        m.setNumeroConsultorio(101);
 
         listaMedicos.append(m);
 
