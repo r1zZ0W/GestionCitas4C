@@ -4,8 +4,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
+// Esta clase recibe los datos necesarios para crear un nuevo paciente en el sistema.
 public class CreatePacienteDTO {
 
+    // Atributos del paciente
     private String nombre;
     private String apellido;
     private String numeroTelefono;
@@ -14,11 +16,13 @@ public class CreatePacienteDTO {
     private Character sexo;
     private Integer prioridad;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd") // Formateador de fecha para compatibilidad en el frontend
     private LocalDate fechaNacimiento;
 
+    // Constructor vacío
     public CreatePacienteDTO() {}
 
+    // Getters y Setters
     public String getNombre() {
         return nombre;
     }

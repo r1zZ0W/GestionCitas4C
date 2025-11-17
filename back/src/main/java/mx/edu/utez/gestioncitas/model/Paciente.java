@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 public class Paciente {
 
+    // Atributos de un Paciente
     private Integer id;
     private String nombre;
     private String apellido;
@@ -16,13 +17,14 @@ public class Paciente {
     private Character sexo; // por favor
     private Integer prioridad; // 1 = Alta, 2 = Media, 3 = Baja
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd") // Formateador de fecha para compatibilidad con el front-end
     private LocalDate fechaNacimiento;
-
     private ListaSimple<Cita> citas = new ListaSimple<>();
 
+    // Constructor vacío
     public Paciente() {}
 
+    // Getters y Setters
     public Integer getId() {
         return id;
     }
@@ -103,6 +105,7 @@ public class Paciente {
         this.citas = citas;
     }
 
+    // Metodo toString para pruebas xd
     @Override
     public String toString() {
         return "--- DATOS DEL PACIENTE ---\n" +

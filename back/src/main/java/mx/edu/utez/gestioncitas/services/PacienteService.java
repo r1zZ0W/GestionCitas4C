@@ -9,17 +9,20 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+@Service // Servicio de paciente el cual maneja la lógica de negocio
 public class PacienteService {
 
+    // Lista simple para almacenar los pacientes
     private final ListaSimple<Paciente> listaPacientes = new ListaSimple<>();
-    private int nextId = 1;
+    private Integer nextId = 1; // Variable para manejar el siguiente ID disponible
 
+    // Constructor que inicializa el servicio con un paciente de ejemplo
     public PacienteService() {
 
         LocalDate ld = LocalDate.now();
         Paciente p = new Paciente();
 
+        // Crear un paciente de ejemplo
         p.setId(1);
         p.setNombre("Juan");
         p.setApellido("Lopez");
@@ -30,10 +33,12 @@ public class PacienteService {
         p.setFechaNacimiento(ld);
         p.setPrioridad(2);
 
+        // Agregar el paciente de ejemplo a la lista
         listaPacientes.append(p);
 
     }
 
+    // Método para obtener todos los pacientes disponibles
     public Map<String, Object> getAll() {
 
         Map<String, Object> mapResponse = new HashMap<>();
@@ -43,7 +48,8 @@ public class PacienteService {
 
     }
 
-    public Map<String, Object> getById(int id) {
+    // Método para obtener un paciente por su ID
+    public Map<String, Object> getById(Integer id) {
 
         Map<String, Object> mapResponse = new HashMap<>();
 
@@ -58,6 +64,7 @@ public class PacienteService {
         return mapResponse;
     }
 
+    // Método para crear un nuevo paciente
     public Map<String, Object> create(Paciente paciente) {
 
         Map<String, Object> mapResponse = new HashMap<>();
@@ -74,8 +81,8 @@ public class PacienteService {
         return mapResponse;
     }
 
-
-    public Map<String, Object> update(int id, Paciente paciente) {
+    // Método para actualizar un paciente existente
+    public Map<String, Object> update(Integer id, Paciente paciente) {
         Map<String, Object> mapResponse = new HashMap<>();
 
             Paciente pacienteUpdate = listaPacientes.findById(id, Paciente::getId);
@@ -92,6 +99,7 @@ public class PacienteService {
         pacienteUpdate.setNumeroTelefono(paciente.getNumeroTelefono());
         pacienteUpdate.setDireccion(paciente.getDireccion());
         pacienteUpdate.setFechaNacimiento(paciente.getFechaNacimiento());
+        pacienteUpdate.setPrioridad(paciente.getPrioridad());
 
         mapResponse.put("paciente", pacienteUpdate);
 
@@ -99,7 +107,8 @@ public class PacienteService {
 
     }
 
-    public Map<String, Object> delete(int id) {
+    // Método para eliminar un paciente existente
+    public Map<String, Object> delete(Integer id) {
 
         Map<String, Object> mapResponse = new HashMap<>();
 

@@ -7,26 +7,31 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+@Service // Servicio de médico el cual maneja la lógica de negocio
 public class MedicoService {
 
+    // Lista simple para almacenar los médicos
     ListaSimple<Medico> listaMedicos = new ListaSimple<>();
-    private int nextId = 1;
+    private Integer nextId = 1; // Variable para manejar el siguiente ID disponible
 
+    // Constructor que inicializa el servicio con un médico de ejemplo
     public MedicoService() {
 
         Medico m = new Medico();
 
+        // Crear un médico de ejemplo
         m.setId(1);
         m.setNombre("Dr. Pedro");
         m.setApellido("Gomez");
         m.setEspecialidad("Medicina General");
         m.setNumeroConsultorio(101);
 
+        // Agregar el médico de ejemplo a la lista
         listaMedicos.append(m);
 
     }
 
+    // Método para obtener todos los médicos disponibles
     public Map<String, Object> getAll() {
 
         Map<String, Object> mapResponse = new HashMap<>();
@@ -36,7 +41,8 @@ public class MedicoService {
 
     }
 
-    public Map<String, Object> getById(int id) {
+    // Método para obtener un médico por su ID
+    public Map<String, Object> getById(Integer id) {
 
         Map<String, Object> mapResponse = new HashMap<>();
 
@@ -51,6 +57,7 @@ public class MedicoService {
         return mapResponse;
     }
 
+    // Método para crear un nuevo médico
     public Map<String, Object> create(Medico medico) {
 
         Map<String, Object> mapResponse = new HashMap<>();
@@ -67,8 +74,8 @@ public class MedicoService {
         return mapResponse;
     }
 
-
-    public Map<String, Object> update(int id, Medico medico) {
+    // Método para actualizar un médico existente
+    public Map<String, Object> update(Integer id, Medico medico) {
         Map<String, Object> mapResponse = new HashMap<>();
 
         Medico medicoUpdate = listaMedicos.findById(id, Medico::getId);
@@ -90,7 +97,8 @@ public class MedicoService {
 
     }
 
-    public Map<String, Object> delete(int id) {
+    // Método para eliminar un médico por su ID
+    public Map<String, Object> delete(Integer id) {
 
         Map<String, Object> mapResponse = new HashMap<>();
 

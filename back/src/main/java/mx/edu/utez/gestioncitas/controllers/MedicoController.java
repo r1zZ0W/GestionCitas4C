@@ -17,13 +17,15 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class MedicoController {
 
+    // Servicio de Médico inyectado
     private final MedicoService medicoService;
 
+    // Constructor para inyectar el servicio
     public MedicoController(MedicoService medicoService) {
         this.medicoService = medicoService;
     }
 
-    @GetMapping("")
+    @GetMapping("") // Petición GET para obtener todos los médicos
     public ResponseEntity<Object> getAll() {
 
         Map<String, Object> mapResponse = medicoService.getAll();
@@ -32,7 +34,7 @@ public class MedicoController {
 
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}") // Petición GET para obtener un médico por ID
     public ResponseEntity<Object> getById(@PathVariable Integer id) {
 
         Map<String, Object> mapResponse = medicoService.getById(id);
@@ -40,7 +42,7 @@ public class MedicoController {
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
 
-    @PostMapping("")
+    @PostMapping("") // Petición POST para crear un nuevo médico
     public ResponseEntity<Object> create(@RequestBody CreateMedicoDTO medico) {
 
         Medico newMedico = mapMedico(medico);
@@ -52,7 +54,7 @@ public class MedicoController {
 
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}") // Petición PUT para actualizar un médico existente
     public ResponseEntity<Object> update(@RequestBody CreateMedicoDTO medico,
                                          @PathVariable Integer id) {
 
@@ -63,7 +65,7 @@ public class MedicoController {
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}") // Petición DELETE para eliminar un médico por ID
     public ResponseEntity<Object> delete(@PathVariable Integer id) {
 
         Map<String, Object> mapResponse = medicoService.delete(id);
@@ -72,6 +74,7 @@ public class MedicoController {
 
     }
 
+    // Método privado para mapear CreateMedicoDTO a Medico
     private Medico mapMedico(CreateMedicoDTO medico) {
 
         Medico newMedico = new Medico();
