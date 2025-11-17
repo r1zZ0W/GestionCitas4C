@@ -94,8 +94,8 @@ public class ListaSimple<T> {
     public T findById(Integer id, Function<T, Integer> idGetter) {
         Nodo<T> current = head;
         while (current != null) {
-
-            if (idGetter.apply(current.getData()).equals(id))
+            Integer currentId = idGetter.apply(current.getData());
+            if (currentId != null && currentId.equals(id))
                 return current.getData();
 
             current = current.getNext();
