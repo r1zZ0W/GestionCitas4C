@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Citas</title>
+    
+    <!--Bustra -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bustra Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                Gestión de Citas Médicas
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="pacientes.html">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="medicos.html">Médicos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="citas.html">Citas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- SECCIÓN DE CITAS -->
+        <section id="citas-section" class="mb-5">
+            <div class="card shadow-sm">
+                <div class="card-header text-white">
+                    <h3 class="card-title mb-0">
+                        Gestión de Citas
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Formulario de Citas -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">Registrar Nueva Cita</h5>
+                            <form id="formCita">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="inpFecha" class="form-label">Fecha <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" id="inpFecha" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="inpHora" class="form-label">Hora <span class="text-danger">*</span></label>
+                                        <input type="time" class="form-control" id="inpHora" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="selectPaciente" class="form-label">Paciente <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="selectPaciente" required>
+                                            <option value="">Seleccione un paciente</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="selectMedico" class="form-label">Médico <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="selectMedico" required>
+                                            <option value="">Seleccione un médico</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="inpMotivoConsulta" class="form-label">Motivo de Consulta <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="inpMotivoConsulta" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="selectEstado" class="form-label">Estado <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="selectEstado" required>
+                                            <option value="">Seleccione</option>
+                                            <option value="P">Programada</option>
+                                            <option value="C">Cancelada</option>
+                                            <option value="F">Finalizada</option>
+                                            <option value="R">Reagendada</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333;" id="btnEnviarCita">
+                                            Registrar Cita
+                                        </button>
+                                        <button type="reset" class="btn btn-secondary">
+                                            Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Tabla de Citas -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Lista de Citas</h5>
+                                <button type="button" class="btn btn-sm" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333;" id="btnListarCitas">
+                                    Actualizar Lista
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="tblCitas" class="table table-striped table-hover table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Fecha</th>
+                                            <th>Hora</th>
+                                            <th>Paciente</th>
+                                            <th>Médico</th>
+                                            <th>Motivo</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyCitas">
+                                        <!-- datos datosos aquí -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal para Editar Cita -->
+    <div class="modal fade" id="modalEditarCita" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background-color: #A4CCD9;">
+                    <h5 class="modal-title">Editar Cita</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarCita">
+                        <input type="hidden" id="editCitaId">
+                        <div class="mb-3">
+                            <label for="editFecha" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="editFecha" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editHora" class="form-label">Hora</label>
+                            <input type="time" class="form-control" id="editHora" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSelectPaciente" class="form-label">Paciente</label>
+                            <select class="form-select" id="editSelectPaciente" required>
+                                <option value="">Seleccione un paciente</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSelectMedico" class="form-label">Médico</label>
+                            <select class="form-select" id="editSelectMedico" required>
+                                <option value="">Seleccione un médico</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editMotivoConsulta" class="form-label">Motivo de Consulta</label>
+                            <input type="text" class="form-control" id="editMotivoConsulta" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSelectEstado" class="form-label">Estado</label>
+                            <select class="form-select" id="editSelectEstado" required>
+                                <option value="">Seleccione</option>
+                                <option value="P">Programada</option>
+                                <option value="C">Cancelada</option>
+                                <option value="F">Finalizada</option>
+                                <option value="R">Reagendada</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formEditarCita" class="btn" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333;" id="btnGuardarEdicionCita">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="js/citas.js"></script>
+</body>
+</html>
+

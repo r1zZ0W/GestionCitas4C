@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pacientes</title>
+    
+    <!--Bustra -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bustra Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                Gestión de Citas Médicas
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="pacientes.html">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="medicos.html">Médicos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="citas.html">Citas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- SECCIÓN DE PACIENTES -->
+        <section id="pacientes-section" class="mb-5">
+            <div class="card shadow-sm">
+                <div class="card-header text-white">
+                    <h3 class="card-title mb-0">
+                        Gestión de Pacientes
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Formulario de Pacientes -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">Registrar Nuevo Paciente</h5>
+                            <form id="formPaciente">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="inpNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="inpNombre" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="inpApellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="inpApellidos" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="inpFechaNacimiento" class="form-label">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" id="inpFechaNacimiento" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="inpNumeroTelefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
+                                        <input type="tel" class="form-control" id="inpNumeroTelefono" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="inpCorreoElectronico" class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="inpCorreoElectronico" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="inpDireccion" class="form-label">Dirección <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="inpDireccion" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Sexo <span class="text-danger">*</span></label>
+                                        <div class="d-flex gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="inpSexo" id="inpSexoMasculino" value="M" required>
+                                                <label class="form-check-label" for="inpSexoMasculino">Masculino</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="inpSexo" id="inpSexoFemenino" value="F" required>
+                                                <label class="form-check-label" for="inpSexoFemenino">Femenino</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="inpPrioridad" class="form-label">Prioridad</label>
+                                        <select class="form-select" id="inpPrioridad">
+                                            <option value="">Seleccione</option>
+                                            <option value="1">Baja</option>
+                                            <option value="2">Media</option>
+                                            <option value="3">Alta</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary" id="btnEnviarPaciente">
+                                            Registrar Paciente
+                                        </button>
+                                        <button type="reset" class="btn btn-secondary">
+                                            Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Tabla de Pacientes -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Lista de Pacientes</h5>
+                                <button type="button" class="btn btn-primary btn-sm" id="btnListarPacientes">
+                                    Actualizar Lista
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="tblPersonas" class="table table-striped table-hover table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Nombre</th>
+                                            <th>Apellidos</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyPacientes">
+                                        <!-- datos datosos aquí -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal para Editar Paciente -->
+    <div class="modal fade" id="modalEditarPaciente" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background-color: #8DBCC7;">
+                    <h5 class="modal-title">Editar Paciente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarPaciente">
+                        <input type="hidden" id="editPacienteId">
+                        <div class="mb-3">
+                            <label for="editNombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="editNombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editApellidos" class="form-label">Apellidos</label>
+                            <input type="text" class="form-control" id="editApellidos" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="editFechaNacimiento" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTelefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="editTelefono" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCorreo" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="editCorreo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDireccion" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="editDireccion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sexo</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="editSexo" id="editSexoM" value="M" required>
+                                    <label class="form-check-label" for="editSexoM">Masculino</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="editSexo" id="editSexoF" value="F" required>
+                                    <label class="form-check-label" for="editSexoF">Femenino</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formEditarPaciente" class="btn btn-primary" id="btnGuardarEdicionPaciente">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="js/pacientes.js"></script>
+</body>
+</html>
+

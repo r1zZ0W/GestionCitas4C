@@ -1,122 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.css" />
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-        <title>Gestión de Citas</title>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Citas Médicas</title>
+    
+    <!--Bustra -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bustra Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-    <body>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
-            <form   >
-                <fieldset>
-                    <legend>Front :D</legend>
-                    <p>
-                        <label for="inpNombre">Nombre:</label>
-                        <input type="text" name="inpNombre" id="inpNombre">
-                    </p>
-
-                    <p>
-                        <label for="inpApellidos">Apellidos:</label>
-                        <input type="text" name="inpApellidos" id="inpApellidos">
-                    </p>
-
-                    <p>
-                        <label for="inpFechaNacimiento">Fecha de Nacimiento:</label>
-                        <input type="date" name="inpFechaNacimiento" id="inpFechaNacimiento">
-                    </p>
-
-                    <p>
-                        <label for="inpNumeroTelefono">Número de Teléfono:</label>
-                        <input type="tel" name="inpNumeroTelefono" id="inpNumeroTelefono">
-                    </p>
-                    
-                    <p>
-                        <label for="inpDireccion">Dirección:</label>
-                        <input type="text" name="inpDireccion" id="inpDireccion">
-                    </p>
-                    
-                    <p>
-                        <label for="inpCorreoElectronico">Correo Electrónico:</label>
-                        <input type="email" name="inpCorreoElectronico" id="inpCorreoElectronico">
-                    </p>
-                    
-                    <p>
-                        <div class="d-flex flex-row">
-                            <label for="inpSexo">Sexo:</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="inpSexo" id="inpSexoMasculino" value="M"/>
-                                <label class="form-check-label" for="inpSexoMasculino"> Masculino </label>
-                            </div>
-
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="inpSexo" id="inpSexoFemenino" value="F"/>
-                                <label class="form-check-label" for="inpSexoFemenino"> Femenino </label>
-                            </div>
-
-                        </div>
-                        
-                    </p>
-
-                    <p>
-                        <label for="motivoConsulta">Motivo de Consulta:</label>
-                        <select name="motivoConsulta" id="motivoConsulta">
-                            <option value="">Seleccione una opción</option>
-                            <option value="1">ola</option>
-                            <option value="2">pq si</option>
-                            <option value="3">zi</option>
-                        </select>
-                    </p>
-
-                    <button type="button" id="btnEnviar">Agregar</button>
-                </fieldset>
-                <hr>
-                <fieldset>
-                    <legend>Lista de pacientes</legend>
-                    <button id="btnListar" type="button">Listar</button>
-
-                    <table border="1">
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Nombre</th>
-                                <th>Apellidos</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="tblPersonas">
-                            
-                        </tbody>
-                    </table>
-                </fieldset>
-                <hr>
-                <!--Con data tables js-->
-                <fieldset>
-                    <legend>Pacientes</legend>
-
-                    <table id="dataTablePersonas" class="table table-striped table-responsive table-hover">
-                        <thead>
-                            <th>No.</th>
-                            <th>Nombre</th>
-                            <th>Apellidos</th>
-                        </thead>
-                        <tbody id="tbodyDataTable"></tbody>
-                    </table>
-                </fieldset>
-
-                <fieldset>
-                    <legend>Agregar persona</legend>
-                </fieldset>
-            </form>
+            <a class="navbar-brand" href="index.html">
+                Gestión de Citas Médicas
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="pacientes.html">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="medicos.html">Médicos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="citas.html">Citas</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-            <!-- DTO == //objeto de transferencia de datos*/ -->
-    </body>
+    </nav>
 
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="mb-4">Sistema de Gestión de Citas Médicas</h1>
+                <p class="lead mb-5">Gestiona pacientes, médicos y citas de manera eficiente</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Pacientes</h5>
+                        <p class="card-text">Gestiona el registro y consulta de pacientes</p>
+                        <a href="pacientes.html" class="btn btn-primary">Ir a Pacientes</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Médicos</h5>
+                        <p class="card-text">Administra la información de los médicos</p>
+                        <a href="medicos.html" class="btn btn-success">Ir a Médicos</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Citas</h5>
+                        <p class="card-text">Programa y gestiona las citas médicas</p>
+                        <a href="citas.html" class="btn" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333;">Ir a Citas</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.js"></script>
-    <script src="app.js"></script>
-
+</body>
 </html>
