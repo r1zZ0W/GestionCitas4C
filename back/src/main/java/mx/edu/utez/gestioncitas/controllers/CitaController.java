@@ -70,6 +70,73 @@ public class CitaController {
 
     }
 
+    @GetMapping("/cola/pendientes")
+    public ResponseEntity<Object> getColaCitasPendientes() {
+        Map<String, Object> mapResponse = citaService.getColaCitasPendientes();
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/cola/siguiente")
+    public ResponseEntity<Object> getSiguienteCitaPendiente() {
+        Map<String, Object> mapResponse = citaService.getSiguienteCitaPendiente();
+        
+        if (mapResponse.containsKey("error")) {
+            return new ResponseEntity<>(mapResponse, HttpStatus.NOT_FOUND);
+        }
+        
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
+    @PostMapping("/cola/atender")
+    public ResponseEntity<Object> atenderSiguienteCita() {
+        Map<String, Object> mapResponse = citaService.atenderSiguienteCita();
+        
+        if (mapResponse.containsKey("error")) {
+            return new ResponseEntity<>(mapResponse, HttpStatus.NOT_FOUND);
+        }
+        
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
+    @PostMapping("/cola/agregar/{id}")
+    public ResponseEntity<Object> agregarCitaACola(@PathVariable Integer id) {
+        Map<String, Object> mapResponse = citaService.agregarCitaACola(id);
+        
+        if (mapResponse.containsKey("error")) {
+            return new ResponseEntity<>(mapResponse, HttpStatus.BAD_REQUEST);
+        }
+        
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/pila/historial")
+    public ResponseEntity<Object> getHistorialCitas() {
+        Map<String, Object> mapResponse = citaService.getHistorialCitas();
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/pila/ultima")
+    public ResponseEntity<Object> getUltimaCitaProcesada() {
+        Map<String, Object> mapResponse = citaService.getUltimaCitaProcesada();
+        
+        if (mapResponse.containsKey("error")) {
+            return new ResponseEntity<>(mapResponse, HttpStatus.NOT_FOUND);
+        }
+        
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
+    @PostMapping("/pila/revertir")
+    public ResponseEntity<Object> revertirUltimaCita() {
+        Map<String, Object> mapResponse = citaService.revertirUltimaCita();
+        
+        if (mapResponse.containsKey("error")) {
+            return new ResponseEntity<>(mapResponse, HttpStatus.NOT_FOUND);
+        }
+        
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
     private Cita mapCita(CreateCitaDTO cita) {
 
         Cita newCita = new Cita();

@@ -1,6 +1,8 @@
 package mx.edu.utez.gestioncitas.services;
 
+import mx.edu.utez.gestioncitas.data_structs.Cola;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
+import mx.edu.utez.gestioncitas.data_structs.Pila;
 import mx.edu.utez.gestioncitas.model.Cita;
 import mx.edu.utez.gestioncitas.model.Medico;
 import mx.edu.utez.gestioncitas.model.Paciente;
@@ -14,6 +16,9 @@ import java.util.Map;
 public class CitaService {
 
     ListaSimple<Cita> listaCitas = new ListaSimple<>();
+    Cola<Cita> colaCitasPendientes = new Cola<>(); // FIFO: primero en llegar, primero en salir
+    Pila<Cita> pilaHistorialCitas = new Pila<>(); // LIFO: último en llegar, primero en salir
+    
     private int nextId = 1;
 
     public CitaService() {
@@ -48,6 +53,7 @@ public class CitaService {
         c.setMedicoAsignado(m);
 
         listaCitas.append(c);
+        colaCitasPendientes.enqueue(c); // se va al final de la cola
 
     }
 
@@ -86,8 +92,10 @@ public class CitaService {
 
         cita.setId(nextId += 1);
         listaCitas.append(cita);
+        colaCitasPendientes.enqueue(cita); // nueva cita, se va al final de la cola
 
         mapResponse.put("cita", cita);
+        mapResponse.put("message", "Cita creada y agregada a la cola de pendientes");
         return mapResponse;
     }
 
@@ -130,6 +138,108 @@ public class CitaService {
 
         mapResponse.put("cita", "Cita eliminada correctamente");
 
+        return mapResponse;
+    }
+
+    public Map<String, Object> getColaCitasPendientes() {
+        Map<String, Object> mapResponse = new HashMap<>();
+        mapResponse.put("colaCitasPendientes", colaCitasPendientes.toList());
+        mapResponse.put("tamaño", colaCitasPendientes.size());
+        mapResponse.put("isEmpty", colaCitasPendientes.isEmpty());
+        return mapResponse;
+    }
+
+    public Map<String, Object> getSiguienteCitaPendiente() {
+        Map<String, Object> mapResponse = new HashMap<>();
+        
+        if (colaCitasPendientes.isEmpty()) {
+            mapResponse.put("error", "No hay citas pendientes en la cola");
+            return mapResponse;
+        }
+        
+        Cita siguienteCita = colaCitasPendientes.peek();
+        mapResponse.put("siguienteCita", siguienteCita);
+        mapResponse.put("message", "Esta es la siguiente cita a atender");
+        return mapResponse;
+    }
+
+    public Map<String, Object> atenderSiguienteCita() { // atiende al primero de la cola 
+        Map<String, Object> mapResponse = new HashMap<>();
+        
+        if (colaCitasPendientes.isEmpty()) {
+            mapResponse.put("error", "No hay citas pendientes para atender");
+            return mapResponse;
+        }
+        
+        Cita citaAtendida = colaCitasPendientes.dequeue(); // saca al primero 
+        citaAtendida.setEstado('C');
+        pilaHistorialCitas.push(citaAtendida); // se va al historial 
+        
+        mapResponse.put("citaAtendida", citaAtendida);
+        mapResponse.put("message", "Cita atendida exitosamente. Movida de la cola al historial.");
+        mapResponse.put("citasPendientesRestantes", colaCitasPendientes.size());
+        return mapResponse;
+    }
+
+    public Map<String, Object> agregarCitaACola(int id) {
+        Map<String, Object> mapResponse = new HashMap<>();
+        
+        Cita cita = listaCitas.findById(id, Cita::getId);
+        
+        if (cita == null) {
+            mapResponse.put("error", "Cita no encontrada");
+            return mapResponse;
+        }
+        
+        if (cita.getEstado() != 'A') {
+            mapResponse.put("error", "Solo se pueden agregar citas activas a la cola");
+            return mapResponse;
+        }
+        
+        colaCitasPendientes.enqueue(cita);
+        mapResponse.put("cita", cita);
+        mapResponse.put("message", "Cita agregada a la cola de pendientes");
+        mapResponse.put("posicionEnCola", colaCitasPendientes.size());
+        return mapResponse;
+    }
+
+    public Map<String, Object> getHistorialCitas() {
+        Map<String, Object> mapResponse = new HashMap<>();
+        mapResponse.put("historialCitas", pilaHistorialCitas.toList());
+        mapResponse.put("tamaño", pilaHistorialCitas.size());
+        mapResponse.put("isEmpty", pilaHistorialCitas.isEmpty());
+        mapResponse.put("message", "Historial ordenado LIFO: la última cita procesada aparece primero");
+        return mapResponse;
+    }
+
+    public Map<String, Object> getUltimaCitaProcesada() {
+        Map<String, Object> mapResponse = new HashMap<>();
+        
+        if (pilaHistorialCitas.isEmpty()) {
+            mapResponse.put("error", "No hay citas en el historial");
+            return mapResponse;
+        }
+        
+        Cita ultimaCita = pilaHistorialCitas.peek();
+        mapResponse.put("ultimaCita", ultimaCita);
+        mapResponse.put("message", "Esta es la última cita procesada (LIFO)");
+        return mapResponse;
+    }
+
+    public Map<String, Object> revertirUltimaCita() { // revierte la última cita procesada 
+        Map<String, Object> mapResponse = new HashMap<>();
+        
+        if (pilaHistorialCitas.isEmpty()) {
+            mapResponse.put("error", "No hay citas en el historial para revertir");
+            return mapResponse;
+        }
+        
+        Cita citaRevertida = pilaHistorialCitas.pop(); // saca la última 
+        citaRevertida.setEstado('A');
+        colaCitasPendientes.enqueue(citaRevertida); // vuelve a la cola 
+        
+        mapResponse.put("citaRevertida", citaRevertida);
+        mapResponse.put("message", "Cita revertida exitosamente. Movida del historial a la cola de pendientes.");
         return mapResponse;
     }
 
