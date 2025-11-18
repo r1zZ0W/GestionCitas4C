@@ -15,13 +15,15 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class CitaController {
 
+    // Servicio de Cita inyectado
     private final CitaService citaService;
 
+    // Constructor para inyectar el servicio
     public CitaController(CitaService citaService) {
         this.citaService = citaService;
     }
 
-    @GetMapping("")
+    @GetMapping("") // Petición GET para obtener todas las citas
     public ResponseEntity<Object> getAll() {
 
         Map<String, Object> mapResponse = citaService.getAll();
@@ -30,7 +32,7 @@ public class CitaController {
 
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}") // Petición GET para obtener una cita por ID
     public ResponseEntity<Object> getById(@PathVariable Integer id) {
 
         Map<String, Object> mapResponse = citaService.getById(id);
@@ -38,7 +40,7 @@ public class CitaController {
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
 
-    @PostMapping("")
+    @PostMapping("") // Petición POST para crear una nueva cita
     public ResponseEntity<Object> create(@RequestBody CreateCitaDTO cita) {
 
         Cita newCita = mapCita(cita);
@@ -50,7 +52,7 @@ public class CitaController {
 
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}") // Petición PUT para actualizar una cita existente
     public ResponseEntity<Object> update(@RequestBody CreateCitaDTO cita,
                                          @PathVariable Integer id) {
 
@@ -61,7 +63,7 @@ public class CitaController {
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}") // Petición DELETE para eliminar una cita por ID
     public ResponseEntity<Object> delete(@PathVariable Integer id) {
 
         Map<String, Object> mapResponse = citaService.delete(id);

@@ -1,19 +1,28 @@
 package mx.edu.utez.gestioncitas.model;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.time.LocalDate;
 
 public class Cita {
 
+    // Atributos de una Cita
     private Integer id;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fecha;
+    @DateTimeFormat(pattern = "yyyy-MM-dd") // formateadores de fecha pa compatibilidad con el front-end
     private LocalDate hora;
+
     private Paciente paciente;
     private Medico medicoAsignado;
     private String motivoConsulta;
-    private Character estado; // 'A' = Activa, 'C' = Cancelada, y cámbienle aquí pq me quedé sin ideas XD
+    private Character estado; // 'P' = Programada, 'C' = Cancelada, 'F' = Finalizada, 'R' = Reagendada
 
+    //Constructor vacío
     public Cita() {}
 
+    // Getters y Setters
     public Integer getId() {
         return id;
     }
@@ -69,4 +78,27 @@ public class Cita {
     public void setEstado(Character estado) {
         this.estado = estado;
     }
+
+    // toString para pruebas y que se vean los datos vaya
+    public String toString() {
+
+        String estadoDescripcion = switch (estado) {
+            case 'P' -> "Programada";
+            case 'C' -> "Cancelada";
+            case 'F' -> "Finalizada";
+            case 'R' -> "Reagendada";
+            default -> "Desconocido";
+        };
+
+        return "--- DATOS DE LA CITA ---\n" +
+                "  ID: " + id + "\n" +
+                "  Fecha: " + fecha + "\n" +
+                "  Hora: " + hora + "\n" +
+                "  Paciente: " + paciente.getNombre() + " " + paciente.getApellido() + " (ID: " + paciente.getId() + ")\n" +
+                "  Médico Asignado: " + medicoAsignado.getNombre() + " " + medicoAsignado.getApellido() + " (" + medicoAsignado.getEspecialidad() + ")\n" +
+                "  Motivo de Consulta: " + motivoConsulta + "\n" +
+                "  Estado: " + estadoDescripcion + " (" + estado + ")\n" +
+                "--------------------------";
+    }
+
 }

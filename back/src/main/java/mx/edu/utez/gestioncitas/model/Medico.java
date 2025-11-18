@@ -2,14 +2,17 @@ package mx.edu.utez.gestioncitas.model;
 
 public class Medico {
 
+    // Atributos de un Médico
     private Integer id;
     private String nombre;
     private String apellido;
     private String especialidad;
     private Integer numeroConsultorio;
 
+    // Constructor vacío
     public Medico() {}
 
+    // Getters y Setters
     public Integer getId() {
         return id;
     }
@@ -48,6 +51,16 @@ public class Medico {
 
     public void setNumeroConsultorio(Integer numeroConsultorio) {
         this.numeroConsultorio = numeroConsultorio;
+    }
+
+    public String toString() {
+        return "--- DATOS DEL MÉDICO ---\n" +
+                "  ID: " + id + "\n" +
+                "  Nombre: " + nombre + "\n" +
+                "  Apellido: " + apellido + "\n" +
+                "  Especialidad: " + especialidad + "\n" +
+                "  Número de Consultorio: " + numeroConsultorio + "\n" +
+                "--------------------------";
     }
 
 }

@@ -15,13 +15,15 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class PacienteController {
 
+    // Servicio de Paciente inyectado
     private final PacienteService pacienteService;
 
+    // Constructor para inyectar el servicio
     public PacienteController(PacienteService pacienteService) {
         this.pacienteService = pacienteService;
     }
 
-    @GetMapping("")
+    @GetMapping("") // Petición GET para obtener todos los pacientes
     public ResponseEntity<Object> getAll() {
 
         Map<String, Object> mapResponse = pacienteService.getAll();
@@ -30,7 +32,7 @@ public class PacienteController {
 
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}") // Petición GET para obtener un paciente por ID
     public ResponseEntity<Object> getById(@PathVariable Integer id) {
 
         Map<String, Object> mapResponse = pacienteService.getById(id);
@@ -38,7 +40,7 @@ public class PacienteController {
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
 
-    @PostMapping("")
+    @PostMapping("") // Petición POST para crear un nuevo paciente
     public ResponseEntity<Object> create(@RequestBody CreatePacienteDTO paciente) {
 
         Paciente newPaciente = mapPaciente(paciente);
@@ -50,7 +52,7 @@ public class PacienteController {
 
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}") // Petición PUT para actualizar un paciente existente
     public ResponseEntity<Object> update(@RequestBody CreatePacienteDTO paciente,
                                          @PathVariable Integer id) {
 
@@ -61,7 +63,7 @@ public class PacienteController {
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}") // Petición DELETE para eliminar un paciente por ID
     public ResponseEntity<Object> delete(@PathVariable Integer id) {
 
         Map<String, Object> mapResponse = pacienteService.delete(id);
@@ -70,6 +72,7 @@ public class PacienteController {
 
     }
 
+    // Método privado para mapear CreatePacienteDTO a Paciente
     private Paciente mapPaciente(CreatePacienteDTO paciente) {
 
         Paciente newPaciente = new Paciente();
@@ -81,6 +84,7 @@ public class PacienteController {
         newPaciente.setNumeroTelefono(paciente.getNumeroTelefono());
         newPaciente.setDireccion(paciente.getDireccion());
         newPaciente.setFechaNacimiento(paciente.getFechaNacimiento());
+        newPaciente.setPrioridad(paciente.getPrioridad());
 
         return newPaciente;
 

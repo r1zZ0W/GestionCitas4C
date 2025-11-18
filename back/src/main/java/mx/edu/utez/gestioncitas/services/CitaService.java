@@ -12,15 +12,17 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+@Service // Servicio de cita el cual maneja la lógica de negocio
 public class CitaService {
 
+    // Lista simple para almacenar las citas
     ListaSimple<Cita> listaCitas = new ListaSimple<>();
     Cola<Cita> colaCitasPendientes = new Cola<>(); // FIFO: primero en llegar, primero en salir
     Pila<Cita> pilaHistorialCitas = new Pila<>(); // LIFO: último en llegar, primero en salir
     
     private int nextId = 1;
 
+    // Constructor que inicializa el servicio con una cita de ejemplo
     public CitaService() {
 
         LocalDate ld = LocalDate.now();
@@ -28,6 +30,7 @@ public class CitaService {
         Paciente p = new Paciente();
         Medico m = new Medico();
 
+        // Crear un paciente de ejemplo
         p.setId(1);
         p.setNombre("Juan");
         p.setApellido("Lopez");
@@ -38,12 +41,14 @@ public class CitaService {
         p.setFechaNacimiento(ld);
         p.setPrioridad(2);
 
+        // Crear un médico de ejemplo
         m.setId(1);
         m.setNombre("Dr. Pedro");
         m.setApellido("Gomez");
         m.setEspecialidad("Medicina General");
         m.setNumeroConsultorio(101);
 
+        // Crear una cita de ejemplo
         c.setId(1);
         c.setFecha(ld);
         c.setHora(ld);
@@ -52,11 +57,13 @@ public class CitaService {
         c.setEstado('A');
         c.setMedicoAsignado(m);
 
+        // Agregar la cita de ejemplo a la lista
         listaCitas.append(c);
         colaCitasPendientes.enqueue(c); // se va al final de la cola
 
     }
 
+    // Método para obtener todas las citas disponibles
     public Map<String, Object> getAll() {
 
         Map<String, Object> mapResponse = new HashMap<>();
@@ -66,7 +73,8 @@ public class CitaService {
 
     }
 
-    public Map<String, Object> getById(int id) {
+    // Método para obtener una cita por su ID
+    public Map<String, Object> getById(Integer id) {
 
         Map<String, Object> mapResponse = new HashMap<>();
 
@@ -81,6 +89,7 @@ public class CitaService {
         return mapResponse;
     }
 
+    // Método para crear una nueva cita
     public Map<String, Object> create(Cita cita) {
 
         Map<String, Object> mapResponse = new HashMap<>();
@@ -99,8 +108,8 @@ public class CitaService {
         return mapResponse;
     }
 
-
-    public Map<String, Object> update(int id, Cita cita) {
+    // Método para actualizar una cita existente
+    public Map<String, Object> update(Integer id, Cita cita) {
         Map<String, Object> mapResponse = new HashMap<>();
 
         Cita citaUpdate = listaCitas.findById(id, Cita::getId);
@@ -123,7 +132,8 @@ public class CitaService {
 
     }
 
-    public Map<String, Object> delete(int id) {
+    // Método para eliminar una cita por su ID
+    public Map<String, Object> delete(Integer id) {
 
         Map<String, Object> mapResponse = new HashMap<>();
 
