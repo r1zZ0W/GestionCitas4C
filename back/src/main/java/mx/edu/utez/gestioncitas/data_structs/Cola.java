@@ -1,5 +1,6 @@
 package mx.edu.utez.gestioncitas.data_structs;
 
+import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,8 +79,8 @@ public class Cola<T> {
         System.out.println("null");
     }
 
-    public List<T> toList() {
-        List<T> result = new ArrayList<>();
+    public ListaSimple<T> toList() {
+        ListaSimple<T> result = new ListaSimple<>();
         Nodo<T> current = front;
 
         while (current != null) {

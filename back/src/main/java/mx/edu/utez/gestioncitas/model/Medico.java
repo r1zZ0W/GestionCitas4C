@@ -1,12 +1,25 @@
 package mx.edu.utez.gestioncitas.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "medico")
 public class Medico {
 
     // Atributos de un Médico
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(nullable = false, length = 100)
     private String nombre;
+    @Column(nullable = false, length = 100)
     private String apellido;
+
+    @Column(nullable = false, length = 100)
     private String especialidad;
+
+    @Column(nullable = false)
     private Integer numeroConsultorio;
 
     // Constructor vacío

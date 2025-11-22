@@ -1,22 +1,40 @@
 package mx.edu.utez.gestioncitas.model;
 
+import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
+@Entity
+@Table(name = "cita")
 public class Cita {
 
     // Atributos de una Cita
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "fecha", nullable = false, columnDefinition = "DATE")
     private LocalDate fecha;
-    @DateTimeFormat(pattern = "yyyy-MM-dd") // formateadores de fecha pa compatibilidad con el front-end
-    private LocalDate hora;
 
+    @DateTimeFormat(pattern = "HH:mm") // formateadores de fecha pa compatibilidad con el front-end
+    @Column(name = "hora", nullable = false, columnDefinition = "TIME")
+    private LocalTime hora;
+
+    @ManyToOne
+    @JoinColumn(name = "paciente_id")
     private Paciente paciente;
+
+    @ManyToOne
+    @JoinColumn(name = "medico_id")
     private Medico medicoAsignado;
+
+    @Column(length = 255)
     private String motivoConsulta;
+
+    @Column(length = 1)
     private Character estado; // 'P' = Programada, 'C' = Cancelada, 'F' = Finalizada, 'R' = Reagendada
 
     //Constructor vacío
@@ -39,11 +57,11 @@ public class Cita {
         this.fecha = fecha;
     }
 
-    public LocalDate getHora() {
+    public LocalTime getHora() {
         return hora;
     }
 
-    public void setHora(LocalDate hora) {
+    public void setHora(LocalTime hora) {
         this.hora = hora;
     }
 

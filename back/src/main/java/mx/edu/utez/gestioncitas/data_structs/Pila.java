@@ -71,8 +71,9 @@ public class Pila<T> {
         System.out.println();
     }
 
-    public List<T> toList() {
-        List<T> result = new ArrayList<>();
+    public ListaSimple<T> toList() {
+
+        ListaSimple<T> result = new ListaSimple<>();
         Nodo<T> current = top;
 
         while (current != null) {

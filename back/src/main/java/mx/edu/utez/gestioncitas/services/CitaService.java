@@ -1,87 +1,69 @@
 package mx.edu.utez.gestioncitas.services;
 
 import mx.edu.utez.gestioncitas.data_structs.Cola;
+import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
 import mx.edu.utez.gestioncitas.data_structs.Pila;
 import mx.edu.utez.gestioncitas.model.Cita;
-import mx.edu.utez.gestioncitas.model.Medico;
-import mx.edu.utez.gestioncitas.model.Paciente;
+import mx.edu.utez.gestioncitas.repository.CitaRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-@Service // Servicio de cita el cual maneja la lógica de negocio
+@Service
 public class CitaService {
 
-    // Lista simple para almacenar las citas
-    ListaSimple<Cita> listaCitas = new ListaSimple<>();
-    Cola<Cita> colaCitasPendientes = new Cola<>(); // FIFO: primero en llegar, primero en salir
-    Pila<Cita> pilaHistorialCitas = new Pila<>(); // LIFO: último en llegar, primero en salir
-    
-    private int nextId = 1;
+    private final CitaRepository citaRepository;
+    private final Cola<Cita> colaCitasPendientes = new Cola<>();
+    private final Pila<Cita> pilaHistorialCitas = new Pila<>();
 
-    // Constructor que inicializa el servicio con una cita de ejemplo
-    public CitaService() {
-
-        LocalDate ld = LocalDate.now();
-        Cita c = new Cita();
-        Paciente p = new Paciente();
-        Medico m = new Medico();
-
-        // Crear un paciente de ejemplo
-        p.setId(1);
-        p.setNombre("Juan");
-        p.setApellido("Lopez");
-        p.setSexo('H');
-        p.setCorreoElectronico("2@gmail.com");
-        p.setNumeroTelefono("777 458 6499");
-        p.setDireccion("Calle Paciente");
-        p.setFechaNacimiento(ld);
-        p.setPrioridad(2);
-
-        // Crear un médico de ejemplo
-        m.setId(1);
-        m.setNombre("Dr. Pedro");
-        m.setApellido("Gomez");
-        m.setEspecialidad("Medicina General");
-        m.setNumeroConsultorio(101);
-
-        // Crear una cita de ejemplo
-        c.setId(1);
-        c.setFecha(ld);
-        c.setHora(ld);
-        c.setPaciente(p);
-        c.setMotivoConsulta("Consulta general");
-        c.setEstado('A');
-        c.setMedicoAsignado(m);
-
-        // Agregar la cita de ejemplo a la lista
-        listaCitas.append(c);
-        colaCitasPendientes.enqueue(c); // se va al final de la cola
-
+    // Constructor para inyección de dependencias
+    public CitaService(CitaRepository citaRepository) {
+        this.citaRepository = citaRepository;
+        cargarCitasPendientesDesdeDB();
     }
 
-    // Método para obtener todas las citas disponibles
-    public Map<String, Object> getAll() {
+    /**
+     * Carga las citas activas desde la BD a la cola al iniciar el servicio
+     */
+    private void cargarCitasPendientesDesdeDB() {
+        List<Cita> citasActivas = citaRepository.findAll();
+        for (Cita cita : citasActivas) {
+            if (cita.getEstado() == 'A' || cita.getEstado() == 'P') {
+                colaCitasPendientes.enqueue(cita);
+            }
+        }
+    }
 
-        Map<String, Object> mapResponse = new HashMap<>();
-        mapResponse.put("listCitas", listaCitas.toList());
+    /**
+     * Obtiene todas las citas desde la base de datos
+     */
+    public CustomMap<String, Object> getAll() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        List<Cita> citas = citaRepository.findAll();
+        ListaSimple<Cita> listaCitas = new ListaSimple<>();
+
+        for (Cita cita : citas) {
+            listaCitas.add(cita);
+        }
+
+        mapResponse.put("listCitas", listaCitas);
+        mapResponse.put("total", listaCitas.size());
 
         return mapResponse;
-
     }
 
-    // Método para obtener una cita por su ID
-    public Map<String, Object> getById(Integer id) {
+    /**
+     * Obtiene una cita por su ID
+     */
+    public CustomMap<String, Object> getById(Integer id) {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Map<String, Object> mapResponse = new HashMap<>();
-
-        Cita cita = listaCitas.findById(id, Cita::getId);
+        Cita cita = citaRepository.findById(id).orElse(null);
 
         if (cita == null) {
-            mapResponse.put("error", "No se pudo encontrar la cita");
+            mapResponse.put("error", "No se pudo encontrar la cita con ID: " + id);
             return mapResponse;
         }
 
@@ -89,168 +71,261 @@ public class CitaService {
         return mapResponse;
     }
 
-    // Método para crear una nueva cita
-    public Map<String, Object> create(Cita cita) {
+    /**
+     * Crea una nueva cita en la BD y la agrega a la cola de pendientes
+     */
+    public CustomMap<String, Object> create(Cita cita) {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Map<String, Object> mapResponse = new HashMap<>();
-
-        if(cita == null) {
-            mapResponse.put("error", "Cita no puede ser nulo");
+        if (cita == null) {
+            mapResponse.put("error", "La cita no puede ser nula");
             return mapResponse;
         }
 
-        cita.setId(nextId += 1);
-        listaCitas.append(cita);
-        colaCitasPendientes.enqueue(cita); // nueva cita, se va al final de la cola
+        // Validaciones básicas
+        if (cita.getFecha() == null || cita.getHora() == null) {
+            mapResponse.put("error", "La fecha y hora son obligatorias");
+            return mapResponse;
+        }
 
-        mapResponse.put("cita", cita);
+        if (cita.getPaciente() == null || cita.getMedicoAsignado() == null) {
+            mapResponse.put("error", "El paciente y médico son obligatorios");
+            return mapResponse;
+        }
+
+        // Establecer estado inicial si no se proporcionó
+        if (cita.getEstado() == null) {
+            cita.setEstado('P'); // P = Programada
+        }
+
+        // Guardar en BD (JPA genera el ID automáticamente)
+        Cita citaGuardada = citaRepository.save(cita);
+
+        // Agregar a la cola si está activa o programada
+        if (citaGuardada.getEstado() == 'A' || citaGuardada.getEstado() == 'P') {
+            colaCitasPendientes.enqueue(citaGuardada);
+        }
+
+        mapResponse.put("cita", citaGuardada);
         mapResponse.put("message", "Cita creada y agregada a la cola de pendientes");
+        mapResponse.put("id", citaGuardada.getId());
+
         return mapResponse;
     }
 
-    // Método para actualizar una cita existente
-    public Map<String, Object> update(Integer id, Cita cita) {
-        Map<String, Object> mapResponse = new HashMap<>();
+    /**
+     * Actualiza una cita existente
+     */
+    public CustomMap<String, Object> update(Integer id, Cita cita) {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Cita citaUpdate = listaCitas.findById(id, Cita::getId);
+        Cita citaExistente = citaRepository.findById(id).orElse(null);
 
-        if(citaUpdate == null) {
-            mapResponse.put("error", "Cita no encontrada");
+        if (citaExistente == null) {
+            mapResponse.put("error", "Cita no encontrada con ID: " + id);
             return mapResponse;
         }
 
-        citaUpdate.setId(cita.getId());
-        citaUpdate.setFecha(cita.getFecha());
-        citaUpdate.setHora(cita.getHora());
-        citaUpdate.setPaciente(cita.getPaciente());
-        citaUpdate.setMedicoAsignado(cita.getMedicoAsignado());
-        citaUpdate.setMotivoConsulta(cita.getMotivoConsulta());
-        citaUpdate.setEstado(cita.getEstado());
+        // Actualizar campos
+        if (cita.getFecha() != null) {
+            citaExistente.setFecha(cita.getFecha());
+        }
+        if (cita.getHora() != null) {
+            citaExistente.setHora(cita.getHora());
+        }
+        if (cita.getPaciente() != null) {
+            citaExistente.setPaciente(cita.getPaciente());
+        }
+        if (cita.getMedicoAsignado() != null) {
+            citaExistente.setMedicoAsignado(cita.getMedicoAsignado());
+        }
+        if (cita.getMotivoConsulta() != null) {
+            citaExistente.setMotivoConsulta(cita.getMotivoConsulta());
+        }
+        if (cita.getEstado() != null) {
+            citaExistente.setEstado(cita.getEstado());
+        }
 
-        mapResponse.put("cita", citaUpdate);
+        // Guardar cambios en BD
+        Cita citaActualizada = citaRepository.save(citaExistente);
+
+        mapResponse.put("cita", citaActualizada);
+        mapResponse.put("message", "Cita actualizada exitosamente");
+
         return mapResponse;
-
     }
 
-    // Método para eliminar una cita por su ID
-    public Map<String, Object> delete(Integer id) {
+    /**
+     * Elimina una cita por su ID
+     */
+    public CustomMap<String, Object> delete(Integer id) {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Map<String, Object> mapResponse = new HashMap<>();
+        Cita cita = citaRepository.findById(id).orElse(null);
 
-        Cita citaDelete = listaCitas.findById(id, Cita::getId);
-
-        if(citaDelete == null) {
-            mapResponse.put("error", "Paciente no encontrado");
+        if (cita == null) {
+            mapResponse.put("error", "Cita no encontrada con ID: " + id);
             return mapResponse;
         }
 
-        listaCitas.delete(citaDelete);
+        citaRepository.deleteById(id);
 
-        mapResponse.put("cita", "Cita eliminada correctamente");
+        mapResponse.put("message", "Cita eliminada correctamente");
+        mapResponse.put("citaEliminada", cita);
 
         return mapResponse;
     }
 
-    public Map<String, Object> getColaCitasPendientes() {
-        Map<String, Object> mapResponse = new HashMap<>();
-        mapResponse.put("colaCitasPendientes", colaCitasPendientes.toList());
+    /**
+     * Obtiene todas las citas pendientes en la cola
+     */
+    public CustomMap<String, Object> getColaCitasPendientes() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        ListaSimple<Cita> listaPendientes = new ListaSimple<>();
+        for (Cita cita : colaCitasPendientes.toList()) {
+            listaPendientes.add(cita);
+        }
+
+        mapResponse.put("colaCitasPendientes", listaPendientes);
         mapResponse.put("tamaño", colaCitasPendientes.size());
         mapResponse.put("isEmpty", colaCitasPendientes.isEmpty());
+
         return mapResponse;
     }
 
-    public Map<String, Object> getSiguienteCitaPendiente() {
-        Map<String, Object> mapResponse = new HashMap<>();
-        
+    /**
+     * Obtiene la siguiente cita pendiente sin sacarla de la cola
+     */
+    public CustomMap<String, Object> getSiguienteCitaPendiente() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
         if (colaCitasPendientes.isEmpty()) {
             mapResponse.put("error", "No hay citas pendientes en la cola");
             return mapResponse;
         }
-        
+
         Cita siguienteCita = colaCitasPendientes.peek();
         mapResponse.put("siguienteCita", siguienteCita);
         mapResponse.put("message", "Esta es la siguiente cita a atender");
+
         return mapResponse;
     }
 
-    public Map<String, Object> atenderSiguienteCita() { // atiende al primero de la cola 
-        Map<String, Object> mapResponse = new HashMap<>();
-        
+    /**
+     * Atiende la siguiente cita (la saca de la cola y la marca como completada)
+     */
+    public CustomMap<String, Object> atenderSiguienteCita() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
         if (colaCitasPendientes.isEmpty()) {
             mapResponse.put("error", "No hay citas pendientes para atender");
             return mapResponse;
         }
-        
-        Cita citaAtendida = colaCitasPendientes.dequeue(); // saca al primero 
-        citaAtendida.setEstado('C');
-        pilaHistorialCitas.push(citaAtendida); // se va al historial 
-        
+
+        Cita citaAtendida = colaCitasPendientes.dequeue();
+        citaAtendida.setEstado('F'); // F = Finalizada
+
+        // Actualizar en BD
+        citaRepository.save(citaAtendida);
+
+        // Agregar al historial
+        pilaHistorialCitas.push(citaAtendida);
+
         mapResponse.put("citaAtendida", citaAtendida);
         mapResponse.put("message", "Cita atendida exitosamente. Movida de la cola al historial.");
         mapResponse.put("citasPendientesRestantes", colaCitasPendientes.size());
+
         return mapResponse;
     }
 
-    public Map<String, Object> agregarCitaACola(int id) {
-        Map<String, Object> mapResponse = new HashMap<>();
-        
-        Cita cita = listaCitas.findById(id, Cita::getId);
-        
+    /**
+     * Agrega una cita existente a la cola de pendientes
+     */
+    public CustomMap<String, Object> agregarCitaACola(Integer id) {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        Cita cita = citaRepository.findById(id).orElse(null);
+
         if (cita == null) {
-            mapResponse.put("error", "Cita no encontrada");
+            mapResponse.put("error", "Cita no encontrada con ID: " + id);
             return mapResponse;
         }
-        
-        if (cita.getEstado() != 'A') {
-            mapResponse.put("error", "Solo se pueden agregar citas activas a la cola");
+
+        if (cita.getEstado() != 'A' && cita.getEstado() != 'P') {
+            mapResponse.put("error", "Solo se pueden agregar citas activas (A) o programadas (P) a la cola");
             return mapResponse;
         }
-        
+
         colaCitasPendientes.enqueue(cita);
+
         mapResponse.put("cita", cita);
         mapResponse.put("message", "Cita agregada a la cola de pendientes");
         mapResponse.put("posicionEnCola", colaCitasPendientes.size());
+
         return mapResponse;
     }
 
-    public Map<String, Object> getHistorialCitas() {
-        Map<String, Object> mapResponse = new HashMap<>();
-        mapResponse.put("historialCitas", pilaHistorialCitas.toList());
+    /**
+     * Obtiene el historial de citas procesadas (LIFO)
+     */
+    public CustomMap<String, Object> getHistorialCitas() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        ListaSimple<Cita> listaHistorial = new ListaSimple<>();
+        for (Cita cita : pilaHistorialCitas.toList()) {
+            listaHistorial.add(cita);
+        }
+
+        mapResponse.put("historialCitas", listaHistorial);
         mapResponse.put("tamaño", pilaHistorialCitas.size());
         mapResponse.put("isEmpty", pilaHistorialCitas.isEmpty());
         mapResponse.put("message", "Historial ordenado LIFO: la última cita procesada aparece primero");
+
         return mapResponse;
     }
 
-    public Map<String, Object> getUltimaCitaProcesada() {
-        Map<String, Object> mapResponse = new HashMap<>();
-        
+    /**
+     * Obtiene la última cita procesada sin sacarla del historial
+     */
+    public CustomMap<String, Object> getUltimaCitaProcesada() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
         if (pilaHistorialCitas.isEmpty()) {
             mapResponse.put("error", "No hay citas en el historial");
             return mapResponse;
         }
-        
+
         Cita ultimaCita = pilaHistorialCitas.peek();
         mapResponse.put("ultimaCita", ultimaCita);
         mapResponse.put("message", "Esta es la última cita procesada (LIFO)");
+
         return mapResponse;
     }
 
-    public Map<String, Object> revertirUltimaCita() { // revierte la última cita procesada 
-        Map<String, Object> mapResponse = new HashMap<>();
-        
+    /**
+     * Revierte la última cita procesada (la saca del historial y la vuelve a la cola)
+     */
+    public CustomMap<String, Object> revertirUltimaCita() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
         if (pilaHistorialCitas.isEmpty()) {
             mapResponse.put("error", "No hay citas en el historial para revertir");
             return mapResponse;
         }
-        
-        Cita citaRevertida = pilaHistorialCitas.pop(); // saca la última 
-        citaRevertida.setEstado('A');
-        colaCitasPendientes.enqueue(citaRevertida); // vuelve a la cola 
-        
+
+        Cita citaRevertida = pilaHistorialCitas.pop();
+        citaRevertida.setEstado('P'); // P = Programada nuevamente
+
+        // Actualizar en BD
+        citaRepository.save(citaRevertida);
+
+        // Volver a la cola
+        colaCitasPendientes.enqueue(citaRevertida);
+
         mapResponse.put("citaRevertida", citaRevertida);
         mapResponse.put("message", "Cita revertida exitosamente. Movida del historial a la cola de pendientes.");
+
         return mapResponse;
     }
-
 }

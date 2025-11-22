@@ -1,24 +1,48 @@
 package mx.edu.utez.gestioncitas.model;
 
+import jakarta.persistence.*;
+
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
+
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "paciente")
 public class Paciente {
 
     // Atributos de un Paciente
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(nullable = false, length = 100)
     private String nombre;
+
+    @Column(nullable = false, length = 100)
     private String apellido;
+
+    @Column(name = "numero_telefono", length = 20)
     private String numeroTelefono;
+
+    @Column(length = 255)
     private String direccion;
+
+    @Column(name = "correo_electronico", length = 100)
     private String correoElectronico;
+
+    @Column(length = 1)
     private Character sexo; // por favor
+
+    @Column
     private Integer prioridad; // 1 = Alta, 2 = Media, 3 = Baja
 
+    @Column(name = "fecha_nacimiento")
     @DateTimeFormat(pattern = "yyyy-MM-dd") // Formateador de fecha para compatibilidad con el front-end
     private LocalDate fechaNacimiento;
+
+    @Transient // No se mapea en la base de datos
     private ListaSimple<Cita> citas = new ListaSimple<>();
 
     // Constructor vacío

@@ -12,8 +12,8 @@ public class CreateCitaDTO {
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fecha;
-    @DateTimeFormat(pattern = "yyyy-MM-dd") // Formateador de hora para compatibilidad en el frontend
-    private LocalDate hora;
+    @DateTimeFormat(pattern = "HH:mm") // Formateador de hora para compatibilidad en el frontend
+    private java.time.LocalTime hora;
 
     private Paciente paciente;
     private Medico medicoAsignado;
@@ -32,11 +32,11 @@ public class CreateCitaDTO {
         this.fecha = fecha;
     }
 
-    public LocalDate getHora() {
+    public java.time.LocalTime getHora() {
         return hora;
     }
 
-    public void setHora(LocalDate hora) {
+    public void setHora(java.time.LocalTime hora) {
         this.hora = hora;
     }
 

@@ -30,7 +30,7 @@ async function cargarPacientes() {
     const listaPacientes = jsonResponse.listPacientes;
 
     selectPaciente.innerHTML = '<option value="">Seleccione un paciente</option>';
-    
+
     for (let i = 0; i < listaPacientes.length; i++) {
         const paciente = listaPacientes[i];
         selectPaciente.innerHTML += `<option value="${paciente.id}">${paciente.nombre} ${paciente.apellido}</option>`;
@@ -51,7 +51,7 @@ async function cargarMedicos() {
     const listaMedicos = jsonResponse.listMedicos;
 
     selectMedico.innerHTML = '<option value="">Seleccione un médico</option>';
-    
+
     for (let i = 0; i < listaMedicos.length; i++) {
         const medico = listaMedicos[i];
         selectMedico.innerHTML += `<option value="${medico.id}">${medico.nombre} ${medico.apellido} - ${medico.especialidad}</option>`;
@@ -60,7 +60,7 @@ async function cargarMedicos() {
 
 document.getElementById('formCita').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     // Obtener los objetos completos de paciente y médico
     const pacienteId = parseInt(selectPaciente.value);
     const medicoId = parseInt(selectMedico.value);
@@ -85,14 +85,10 @@ document.getElementById('formCita').addEventListener('submit', async (e) => {
     const medicoData = await responseMedico.json();
     const medico = medicoData.medico;
 
-    // Combinar fecha y hora en una sola fecha
-    const fechaHoraCompleta = new Date(`${inpFecha.value}T${inpHora.value}`);
-    const fechaHoraStr = fechaHoraCompleta.toISOString().split('T')[0];
-
     const obj = {};
 
     obj.fecha = inpFecha.value;
-    obj.hora = fechaHoraStr; 
+    obj.hora = inpHora.value;
     obj.paciente = paciente; // Objeto completo
     obj.medicoAsignado = medico; // Objeto completo
     obj.motivoConsulta = inpMotivoConsulta.value;
@@ -145,10 +141,10 @@ async function listarCitas() {
     let htmlTable = '';
 
     for (let i = 0; i < listaCitas.length; i++) {
-    
+
         const cita = listaCitas[i];
         let estadoTexto = '';
-        switch(cita.estado) {
+        switch (cita.estado) {
             case 'P':
                 estadoTexto = 'Programada';
                 break;
@@ -166,8 +162,8 @@ async function listarCitas() {
         }
         const pacienteNombre = cita.paciente ? `${cita.paciente.nombre} ${cita.paciente.apellido}` : 'N/A';
         const medicoNombre = cita.medicoAsignado ? `${cita.medicoAsignado.nombre} ${cita.medicoAsignado.apellido}` : 'N/A';
-        const fechaHora = cita.hora ? new Date(cita.hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-    
+        const fechaHora = cita.hora ? cita.hora.substring(0, 5) : 'N/A';
+
         htmlTable += `
         <tr>
             <td>${i + 1}</td>
@@ -187,11 +183,11 @@ async function listarCitas() {
             </td>
         </tr>
         `;
-    
+
     }
 
-    tbodyCitas.innerHTML = htmlTable;  
-    
+    tbodyCitas.innerHTML = htmlTable;
+
 }
 
 // Función para cargar datos de una cita en el modal de edición
@@ -211,12 +207,10 @@ async function cargarDatosCita(id) {
 
             document.getElementById('editCitaId').value = cita.id;
             document.getElementById('editFecha').value = cita.fecha || '';
-            
+
             // Convertir hora a formato time
             if (cita.hora) {
-                const fechaHora = new Date(cita.hora);
-                const horaStr = fechaHora.toTimeString().split(' ')[0].substring(0, 5);
-                document.getElementById('editHora').value = horaStr;
+                document.getElementById('editHora').value = cita.hora.substring(0, 5);
             }
 
             document.getElementById('editMotivoConsulta').value = cita.motivoConsulta || '';
@@ -262,14 +256,14 @@ async function cargarPacientesEnModal() {
 
     const selectEditPaciente = document.getElementById('editSelectPaciente');
     const currentValue = selectEditPaciente.value;
-    
+
     selectEditPaciente.innerHTML = '<option value="">Seleccione un paciente</option>';
-    
+
     for (let i = 0; i < listaPacientes.length; i++) {
         const paciente = listaPacientes[i];
         selectEditPaciente.innerHTML += `<option value="${paciente.id}">${paciente.nombre} ${paciente.apellido}</option>`;
     }
-    
+
     // Restaurar valor seleccionado
     if (currentValue) {
         selectEditPaciente.value = currentValue;
@@ -291,14 +285,14 @@ async function cargarMedicosEnModal() {
 
     const selectEditMedico = document.getElementById('editSelectMedico');
     const currentValue = selectEditMedico.value;
-    
+
     selectEditMedico.innerHTML = '<option value="">Seleccione un médico</option>';
-    
+
     for (let i = 0; i < listaMedicos.length; i++) {
         const medico = listaMedicos[i];
         selectEditMedico.innerHTML += `<option value="${medico.id}">${medico.nombre} ${medico.apellido} - ${medico.especialidad}</option>`;
     }
-    
+
     // Restaurar valor seleccionado
     if (currentValue) {
         selectEditMedico.value = currentValue;
@@ -308,7 +302,7 @@ async function cargarMedicosEnModal() {
 // Event listener para guardar edición de cita
 document.getElementById('formEditarCita').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     try {
         const id = document.getElementById('editCitaId').value;
         const pacienteId = parseInt(document.getElementById('editSelectPaciente').value);
@@ -334,13 +328,9 @@ document.getElementById('formEditarCita').addEventListener('submit', async (e) =
         const medicoData = await responseMedico.json();
         const medico = medicoData.medico;
 
-        // Combinar fecha y hora
-        const fechaHoraCompleta = new Date(`${document.getElementById('editFecha').value}T${document.getElementById('editHora').value}`);
-        const fechaHoraStr = fechaHoraCompleta.toISOString().split('T')[0];
-
         const obj = {
             fecha: document.getElementById('editFecha').value,
-            hora: fechaHoraStr,
+            hora: document.getElementById('editHora').value,
             paciente: paciente,
             medicoAsignado: medico,
             motivoConsulta: document.getElementById('editMotivoConsulta').value.trim(),
@@ -401,7 +391,7 @@ async function eliminarCita(id) {
 // Event listener para acciones en la tabla (editar/eliminar)
 document.addEventListener('click', async (event) => {
     const target = event.target;
-    
+
     // Manejo de botones de citas
     const btnCita = target.closest('.btnEditarCita') || target.closest('.btnEliminarCita');
     if (btnCita) {
