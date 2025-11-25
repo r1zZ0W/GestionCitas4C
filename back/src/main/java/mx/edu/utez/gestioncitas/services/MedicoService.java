@@ -2,6 +2,7 @@ package mx.edu.utez.gestioncitas.services;
 
 import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
+import mx.edu.utez.gestioncitas.dtos.CreateMedicoDTO;
 import mx.edu.utez.gestioncitas.model.Medico;
 import mx.edu.utez.gestioncitas.repository.MedicoRepository;
 
@@ -58,7 +59,7 @@ public class MedicoService {
     /**
      * Crea un nuevo médico en la base de datos
      */
-    public CustomMap<String, Object> create(Medico medico) {
+    public CustomMap<String, Object> create(CreateMedicoDTO medico) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         if (medico == null) {
@@ -82,12 +83,14 @@ public class MedicoService {
             return mapResponse;
         }
 
-        // Guardar en BD (JPA genera el ID automáticamente)
-        Medico medicoGuardado = medicoRepository.save(medico);
+        // Se have el mapeo de DTO a entidad Médico para guardarlo en BD
+        Medico nuevoMedico = mapMedico(medico);
+
+        // Guardar en BD el nuevo médico
+        Medico medicoGuardado = medicoRepository.save(nuevoMedico);
 
         mapResponse.put("medico", medicoGuardado);
         mapResponse.put("message", "Médico creado exitosamente");
-        mapResponse.put("id", medicoGuardado.getId());
 
         return mapResponse;
     }
@@ -95,7 +98,7 @@ public class MedicoService {
     /**
      * Actualiza un médico existente
      */
-    public CustomMap<String, Object> update(Integer id, Medico medico) {
+    public CustomMap<String, Object> update(Integer id, CreateMedicoDTO medico) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         Medico medicoExistente = medicoRepository.findById(id).orElse(null);
@@ -150,6 +153,24 @@ public class MedicoService {
         mapResponse.put("medicoEliminado", medico);
 
         return mapResponse;
+    }
+
+    /**
+     * Mapea un CreateMedicoDTO a una entidad Médico para que pueda ser guardada en la base de datos
+     * @param medico DTO con los datos del médico a crear
+     * @return Entidad Médico mapeada
+     */
+    private Medico mapMedico(CreateMedicoDTO medico) {
+
+        Medico newMedico = new Medico();
+
+        newMedico.setNombre(medico.getNombre());
+        newMedico.setApellido(medico.getApellido());
+        newMedico.setEspecialidad(medico.getEspecialidad());
+        newMedico.setNumeroConsultorio(medico.getNumeroConsultorio());
+
+        return newMedico;
+
     }
 
     /**

@@ -42,10 +42,9 @@ public class MedicoController {
     @PostMapping("") // Petición POST para crear un nuevo médico
     public ResponseEntity<Object> create(@RequestBody CreateMedicoDTO medico) {
 
-        Medico newMedico = mapMedico(medico);
-        CustomMap<String, Object> mapResponse = medicoService.create(newMedico);
+        CustomMap<String, Object> mapResponse = medicoService.create(medico);
 
-        System.out.println(newMedico);
+        System.out.println(medico);
 
         return new ResponseEntity<>(mapResponse, HttpStatus.CREATED);
 
@@ -55,9 +54,7 @@ public class MedicoController {
     public ResponseEntity<Object> update(@RequestBody CreateMedicoDTO medico,
                                          @PathVariable Integer id) {
 
-        Medico newMedico = mapMedico(medico);
-
-        CustomMap<String, Object> mapResponse = medicoService.update(id, newMedico);
+        CustomMap<String, Object> mapResponse = medicoService.update(id, medico);
 
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
@@ -71,17 +68,4 @@ public class MedicoController {
 
     }
 
-    // Método privado para mapear CreateMedicoDTO a Medico
-    private Medico mapMedico(CreateMedicoDTO medico) {
-
-        Medico newMedico = new Medico();
-
-        newMedico.setNombre(medico.getNombre());
-        newMedico.setApellido(medico.getApellido());
-        newMedico.setEspecialidad(medico.getEspecialidad());
-        newMedico.setNumeroConsultorio(medico.getNumeroConsultorio());
-
-        return newMedico;
-
-    }
 }

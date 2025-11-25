@@ -4,52 +4,55 @@ import mx.edu.utez.gestioncitas.data_structs.Cola;
 import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
 import mx.edu.utez.gestioncitas.data_structs.Pila;
+
+import mx.edu.utez.gestioncitas.dtos.CreateCitaDTO;
+
 import mx.edu.utez.gestioncitas.model.Cita;
+
 import mx.edu.utez.gestioncitas.repository.CitaRepository;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 public class CitaService {
 
+    /**
+     * Repositorio JPA para operaciones CRUD en la entidad Cita al igual que la gestión de la cola de citas pendientes y el historial de citas atendidas utilizando una pila.
+     */
     private final CitaRepository citaRepository;
     private final Cola<Cita> colaCitasPendientes = new Cola<>();
     private final Pila<Cita> pilaHistorialCitas = new Pila<>();
 
-    // Constructor para inyección de dependencias
+    /**
+     *Constructor para inyección de dependencias y carga inicial de citas pendientes
+     */
     public CitaService(CitaRepository citaRepository) {
         this.citaRepository = citaRepository;
-        cargarCitasPendientesDesdeDB();
+        cargarCitasPendientes();
     }
 
     /**
      * Carga las citas activas desde la BD a la cola al iniciar el servicio
      */
-    private void cargarCitasPendientesDesdeDB() {
-        List<Cita> citasActivas = citaRepository.findAll();
-        for (Cita cita : citasActivas) {
-            if (cita.getEstado() == 'A' || cita.getEstado() == 'P') {
-                colaCitasPendientes.enqueue(cita);
-            }
-        }
+    private void cargarCitasPendientes() {
+
+        for (Cita cita : citaRepository.findAll())
+            if (cita.getEstado() == 'A' || cita.getEstado() == 'P')
+                colaCitasPendientes.offer(cita);
+
     }
 
     /**
      * Obtiene todas las citas desde la base de datos
      */
     public CustomMap<String, Object> getAll() {
-        CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        List<Cita> citas = citaRepository.findAll();
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
         ListaSimple<Cita> listaCitas = new ListaSimple<>();
 
-        for (Cita cita : citas) {
-            listaCitas.add(cita);
-        }
-
+        listaCitas.addAll(citaRepository.findAll());
         mapResponse.put("listCitas", listaCitas);
-        mapResponse.put("total", listaCitas.size());
 
         return mapResponse;
     }
@@ -74,7 +77,7 @@ public class CitaService {
     /**
      * Crea una nueva cita en la BD y la agrega a la cola de pendientes
      */
-    public CustomMap<String, Object> create(Cita cita) {
+    public CustomMap<String, Object> create(CreateCitaDTO cita) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         if (cita == null) {
@@ -98,12 +101,14 @@ public class CitaService {
             cita.setEstado('P'); // P = Programada
         }
 
+        Cita nuevaCita = mapCita(cita);
+
         // Guardar en BD (JPA genera el ID automáticamente)
-        Cita citaGuardada = citaRepository.save(cita);
+        Cita citaGuardada = citaRepository.save(nuevaCita);
 
         // Agregar a la cola si está activa o programada
         if (citaGuardada.getEstado() == 'A' || citaGuardada.getEstado() == 'P') {
-            colaCitasPendientes.enqueue(citaGuardada);
+            colaCitasPendientes.offer(citaGuardada);
         }
 
         mapResponse.put("cita", citaGuardada);
@@ -116,7 +121,7 @@ public class CitaService {
     /**
      * Actualiza una cita existente
      */
-    public CustomMap<String, Object> update(Integer id, Cita cita) {
+    public CustomMap<String, Object> update(Integer id, CreateCitaDTO cita) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         Cita citaExistente = citaRepository.findById(id).orElse(null);
@@ -177,15 +182,33 @@ public class CitaService {
     }
 
     /**
+     * Mapea un CreateCitaDTO a una entidad Cita para que JPA la pueda guardar
+     * @param cita DTO con los datos de la cita
+     * @return entidad Cita mapeada
+     */
+    private Cita mapCita(CreateCitaDTO cita) {
+
+        Cita newCita = new Cita();
+
+        newCita.setFecha(cita.getFecha());
+        newCita.setHora(cita.getHora());
+        newCita.setPaciente(cita.getPaciente());
+        newCita.setMedicoAsignado(cita.getMedicoAsignado());
+        newCita.setMotivoConsulta(cita.getMotivoConsulta());
+        newCita.setEstado(cita.getEstado());
+
+        return newCita;
+
+    }
+
+    /**
      * Obtiene todas las citas pendientes en la cola
      */
     public CustomMap<String, Object> getColaCitasPendientes() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         ListaSimple<Cita> listaPendientes = new ListaSimple<>();
-        for (Cita cita : colaCitasPendientes.toList()) {
-            listaPendientes.add(cita);
-        }
+        listaPendientes.addAll(colaCitasPendientes);
 
         mapResponse.put("colaCitasPendientes", listaPendientes);
         mapResponse.put("tamaño", colaCitasPendientes.size());
@@ -223,7 +246,7 @@ public class CitaService {
             return mapResponse;
         }
 
-        Cita citaAtendida = colaCitasPendientes.dequeue();
+        Cita citaAtendida = colaCitasPendientes.poll();
         citaAtendida.setEstado('F'); // F = Finalizada
 
         // Actualizar en BD
@@ -257,7 +280,7 @@ public class CitaService {
             return mapResponse;
         }
 
-        colaCitasPendientes.enqueue(cita);
+        colaCitasPendientes.offer(cita);
 
         mapResponse.put("cita", cita);
         mapResponse.put("message", "Cita agregada a la cola de pendientes");
@@ -321,7 +344,7 @@ public class CitaService {
         citaRepository.save(citaRevertida);
 
         // Volver a la cola
-        colaCitasPendientes.enqueue(citaRevertida);
+        colaCitasPendientes.offer(citaRevertida);
 
         mapResponse.put("citaRevertida", citaRevertida);
         mapResponse.put("message", "Cita revertida exitosamente. Movida del historial a la cola de pendientes.");

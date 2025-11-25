@@ -2,11 +2,12 @@ package mx.edu.utez.gestioncitas.services;
 
 import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
+import mx.edu.utez.gestioncitas.dtos.CreatePacienteDTO;
 import mx.edu.utez.gestioncitas.model.Paciente;
 import mx.edu.utez.gestioncitas.repository.PacienteRepository;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 public class PacienteService {
@@ -22,14 +23,11 @@ public class PacienteService {
      * Obtiene todos los pacientes desde la base de datos
      */
     public CustomMap<String, Object> getAll() {
-        CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        List<Paciente> pacientes = pacienteRepository.findAll();
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
         ListaSimple<Paciente> listaPacientes = new ListaSimple<>();
 
-        for (Paciente paciente : pacientes) {
-            listaPacientes.add(paciente);
-        }
+        listaPacientes.addAll(pacienteRepository.findAll());
 
         mapResponse.put("listPacientes", listaPacientes);
         mapResponse.put("total", listaPacientes.size());
@@ -57,33 +55,11 @@ public class PacienteService {
     /**
      * Crea un nuevo paciente en la base de datos
      */
-    public CustomMap<String, Object> create(Paciente paciente) {
+    public CustomMap<String, Object> create(CreatePacienteDTO paciente) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         if (paciente == null) {
             mapResponse.put("error", "El paciente no puede ser nulo");
-            return mapResponse;
-        }
-
-        // Validaciones básicas
-        if (paciente.getNombre() == null || paciente.getNombre().trim().isEmpty()) {
-            mapResponse.put("error", "El nombre del paciente es obligatorio");
-            return mapResponse;
-        }
-
-        if (paciente.getApellido() == null || paciente.getApellido().trim().isEmpty()) {
-            mapResponse.put("error", "El apellido del paciente es obligatorio");
-            return mapResponse;
-        }
-
-        if (paciente.getCorreoElectronico() == null || paciente.getCorreoElectronico().trim().isEmpty()) {
-            mapResponse.put("error", "El correo electrónico es obligatorio");
-            return mapResponse;
-        }
-
-        // Validar formato de correo (básico)
-        if (!paciente.getCorreoElectronico().contains("@")) {
-            mapResponse.put("error", "El formato del correo electrónico no es válido");
             return mapResponse;
         }
 
@@ -92,20 +68,25 @@ public class PacienteService {
             paciente.setPrioridad(3); // Baja por defecto
         }
 
-        // Guardar en BD (JPA genera el ID automáticamente)
-        Paciente pacienteGuardado = pacienteRepository.save(paciente);
+        // Mapear DTO a entidad Paciente para guardar en BD
+        Paciente nuevoPaciente = mapPaciente(paciente);
+
+        // Guardar en BD
+        Paciente pacienteGuardado = pacienteRepository.save(nuevoPaciente);
 
         mapResponse.put("paciente", pacienteGuardado);
         mapResponse.put("message", "Paciente creado exitosamente");
         mapResponse.put("id", pacienteGuardado.getId());
 
         return mapResponse;
+
     }
 
     /**
      * Actualiza un paciente existente
      */
-    public CustomMap<String, Object> update(Integer id, Paciente paciente) {
+    public CustomMap<String, Object> update(Integer id, CreatePacienteDTO paciente) {
+
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         Paciente pacienteExistente = pacienteRepository.findById(id).orElse(null);
@@ -116,39 +97,30 @@ public class PacienteService {
         }
 
         // Actualizar campos solo si vienen con datos
-        if (paciente.getNombre() != null && !paciente.getNombre().trim().isEmpty()) {
+        if (paciente.getNombre() != null && !paciente.getNombre().trim().isEmpty())
             pacienteExistente.setNombre(paciente.getNombre());
-        }
 
-        if (paciente.getApellido() != null && !paciente.getApellido().trim().isEmpty()) {
+        if (paciente.getApellido() != null && !paciente.getApellido().trim().isEmpty())
             pacienteExistente.setApellido(paciente.getApellido());
-        }
 
-        if (paciente.getSexo() != null) {
+        if (paciente.getSexo() != null)
             pacienteExistente.setSexo(paciente.getSexo());
-        }
 
-        if (paciente.getCorreoElectronico() != null && !paciente.getCorreoElectronico().trim().isEmpty()) {
-            if (paciente.getCorreoElectronico().contains("@")) {
+        if (paciente.getCorreoElectronico() != null && !paciente.getCorreoElectronico().trim().isEmpty())
+            if (paciente.getCorreoElectronico().contains("@"))
                 pacienteExistente.setCorreoElectronico(paciente.getCorreoElectronico());
-            }
-        }
 
-        if (paciente.getNumeroTelefono() != null && !paciente.getNumeroTelefono().trim().isEmpty()) {
+        if (paciente.getNumeroTelefono() != null && !paciente.getNumeroTelefono().trim().isEmpty())
             pacienteExistente.setNumeroTelefono(paciente.getNumeroTelefono());
-        }
 
-        if (paciente.getDireccion() != null && !paciente.getDireccion().trim().isEmpty()) {
+        if (paciente.getDireccion() != null && !paciente.getDireccion().trim().isEmpty())
             pacienteExistente.setDireccion(paciente.getDireccion());
-        }
 
-        if (paciente.getFechaNacimiento() != null) {
+        if (paciente.getFechaNacimiento() != null)
             pacienteExistente.setFechaNacimiento(paciente.getFechaNacimiento());
-        }
 
-        if (paciente.getPrioridad() != null) {
+        if (paciente.getPrioridad() != null)
             pacienteExistente.setPrioridad(paciente.getPrioridad());
-        }
 
         // Guardar cambios en BD
         Paciente pacienteActualizado = pacienteRepository.save(pacienteExistente);
@@ -160,6 +132,29 @@ public class PacienteService {
     }
 
     /**
+     * Mapea un CreatePacienteDTO a una entidad Paciente para guardarlo en BD
+     *
+     * @param paciente DTO con datos del paciente
+     * @return Entidad Paciente mapeada
+     */
+    private Paciente mapPaciente(CreatePacienteDTO paciente) {
+
+        Paciente newPaciente = new Paciente();
+
+        newPaciente.setNombre(paciente.getNombre());
+        newPaciente.setApellido(paciente.getApellido());
+        newPaciente.setSexo(paciente.getSexo());
+        newPaciente.setCorreoElectronico(paciente.getCorreoElectronico());
+        newPaciente.setNumeroTelefono(paciente.getNumeroTelefono());
+        newPaciente.setDireccion(paciente.getDireccion());
+        newPaciente.setFechaNacimiento(paciente.getFechaNacimiento());
+        newPaciente.setPrioridad(paciente.getPrioridad());
+
+        return newPaciente;
+
+    }
+
+    /**
      * Elimina un paciente por su ID
      */
     public CustomMap<String, Object> delete(Integer id) {
@@ -168,16 +163,14 @@ public class PacienteService {
         Paciente paciente = pacienteRepository.findById(id).orElse(null);
 
         if (paciente == null) {
-            mapResponse.put("error", "Paciente no encontrado con ID: " + id);
+            mapResponse.put("error", "Paciente no encontrado");
             return mapResponse;
         }
 
-        // Verificar si tiene citas asignadas (opcional pero recomendado)
-        // Si tienes la relación bidireccional:
-        // if (paciente.getCitas() != null && !paciente.getCitas().isEmpty()) {
-        //     mapResponse.put("error", "No se puede eliminar un paciente con citas asignadas");
-        //     return mapResponse;
-        // }
+        if (paciente.getCitas() != null && !paciente.getCitas().isEmpty()) {
+            mapResponse.put("error", "No se puede eliminar el paciente con ID: " + id + " porque tiene citas asociadas");
+            return mapResponse;
+        }
 
         pacienteRepository.deleteById(id);
 
@@ -191,111 +184,59 @@ public class PacienteService {
      * Busca pacientes por prioridad
      */
     public CustomMap<String, Object> getByPrioridad(Integer prioridad) {
+
         CustomMap<String, Object> mapResponse = new CustomMap<>();
+        ListaSimple<Paciente> listaJPA = pacienteRepository.findByPrioridad(prioridad);
 
-        if (prioridad == null || prioridad < 1 || prioridad > 3) {
-            mapResponse.put("error", "La prioridad debe ser 1 (Alta), 2 (Media) o 3 (Baja)");
-            return mapResponse;
-        }
-
-        List<Paciente> pacientes = pacienteRepository.findAll();
-        ListaSimple<Paciente> pacientesFiltrados = new ListaSimple<>();
-
-        for (Paciente paciente : pacientes) {
-            if (paciente.getPrioridad() != null && paciente.getPrioridad().equals(prioridad)) {
-                pacientesFiltrados.add(paciente);
-            }
-        }
-
-        if (pacientesFiltrados.isEmpty()) {
+        if (listaJPA.isEmpty())
             mapResponse.put("message", "No se encontraron pacientes con esa prioridad");
-            mapResponse.put("listPacientes", pacientesFiltrados);
-            return mapResponse;
-        }
 
-        String prioridadTexto = switch (prioridad) {
-            case 1 -> "Alta";
-            case 2 -> "Media";
-            case 3 -> "Baja";
-            default -> "Desconocida";
-        };
+        ListaSimple<Paciente> listaSimple = new ListaSimple<>();
+        listaSimple.addAll(listaJPA);
 
-        mapResponse.put("listPacientes", pacientesFiltrados);
-        mapResponse.put("total", pacientesFiltrados.size());
-        mapResponse.put("prioridad", prioridadTexto);
+        mapResponse.put("listPacientes", listaSimple);
+        mapResponse.put("total", listaSimple.size());
 
         return mapResponse;
     }
 
     /**
-     * Busca pacientes por nombre o apellido (búsqueda parcial)
+     * Busca por nombre o apellido
      */
-    public CustomMap<String, Object> buscarPorNombre(String termino) {
+    public CustomMap<String, Object> buscarPorNombre(String nombre) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        if (termino == null || termino.trim().isEmpty()) {
-            mapResponse.put("error", "El término de búsqueda no puede estar vacío");
+        if (nombre == null || nombre.trim().isEmpty()) {
+            mapResponse.put("error", "El término no puede estar vacío");
             return mapResponse;
         }
 
-        List<Paciente> pacientes = pacienteRepository.findAll();
-        ListaSimple<Paciente> pacientesEncontrados = new ListaSimple<>();
-        String terminoBusqueda = termino.toLowerCase().trim();
+        ListaSimple<Paciente> listaJPA = pacienteRepository.buscarPorNombreOApellido(nombre);
 
-        for (Paciente paciente : pacientes) {
-            String nombreCompleto = (paciente.getNombre() + " " + paciente.getApellido()).toLowerCase();
-            if (nombreCompleto.contains(terminoBusqueda)) {
-                pacientesEncontrados.add(paciente);
-            }
-        }
+        if (listaJPA.isEmpty())
+            mapResponse.put("message", "No hay coincidencias");
 
-        if (pacientesEncontrados.isEmpty()) {
-            mapResponse.put("message", "No se encontraron pacientes con ese nombre");
-            mapResponse.put("listPacientes", pacientesEncontrados);
-            return mapResponse;
-        }
 
-        mapResponse.put("listPacientes", pacientesEncontrados);
-        mapResponse.put("total", pacientesEncontrados.size());
-        mapResponse.put("terminoBusqueda", termino);
+        ListaSimple<Paciente> listaSimple = new ListaSimple<>();
+        listaSimple.addAll(listaJPA);
 
+        mapResponse.put("listPacientes", listaSimple);
         return mapResponse;
     }
 
     /**
-     * Obtiene pacientes ordenados por prioridad (1-Alta, 2-Media, 3-Baja)
+     * Obtiene ordenados por prioridad desde la BD
      */
     public CustomMap<String, Object> getAllOrdenadosPorPrioridad() {
+
         CustomMap<String, Object> mapResponse = new CustomMap<>();
+        ListaSimple<Paciente> listaJPA = pacienteRepository.findAllByOrderByPrioridadAsc();
+        ListaSimple<Paciente> listaSimple = new ListaSimple<>();
 
-        List<Paciente> pacientes = pacienteRepository.findAll();
+        listaSimple.addAll(listaJPA);
 
-        // Separar por prioridad usando tus estructuras
-        ListaSimple<Paciente> prioridadAlta = new ListaSimple<>();
-        ListaSimple<Paciente> prioridadMedia = new ListaSimple<>();
-        ListaSimple<Paciente> prioridadBaja = new ListaSimple<>();
-
-        for (Paciente paciente : pacientes) {
-            Integer prioridad = paciente.getPrioridad() != null ? paciente.getPrioridad() : 3;
-            switch (prioridad) {
-                case 1 -> prioridadAlta.add(paciente);
-                case 2 -> prioridadMedia.add(paciente);
-                default -> prioridadBaja.add(paciente);
-            }
-        }
-
-        // Combinar en orden: Alta -> Media -> Baja
-        ListaSimple<Paciente> listaOrdenada = new ListaSimple<>();
-
-        for (Paciente p : prioridadAlta) listaOrdenada.add(p);
-        for (Paciente p : prioridadMedia) listaOrdenada.add(p);
-        for (Paciente p : prioridadBaja) listaOrdenada.add(p);
-
-        mapResponse.put("listPacientes", listaOrdenada);
-        mapResponse.put("total", listaOrdenada.size());
-        mapResponse.put("prioridadAlta", prioridadAlta.size());
-        mapResponse.put("prioridadMedia", prioridadMedia.size());
-        mapResponse.put("prioridadBaja", prioridadBaja.size());
+        mapResponse.put("listPacientes", listaSimple);
+        mapResponse.put("total", listaSimple.size());
 
         return mapResponse;
     }

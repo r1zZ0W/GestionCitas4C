@@ -42,10 +42,9 @@ public class PacienteController {
     @PostMapping("") // Petición POST para crear un nuevo paciente
     public ResponseEntity<Object> create(@RequestBody CreatePacienteDTO paciente) {
 
-        Paciente newPaciente = mapPaciente(paciente);
-        CustomMap<String, Object> mapResponse = pacienteService.create(newPaciente);
+        CustomMap<String, Object> mapResponse = pacienteService.create(paciente);
 
-        System.out.println(newPaciente);
+        System.out.println(paciente);
 
         return new ResponseEntity<>(mapResponse, HttpStatus.CREATED);
 
@@ -55,9 +54,7 @@ public class PacienteController {
     public ResponseEntity<Object> update(@RequestBody CreatePacienteDTO paciente,
                                          @PathVariable Integer id) {
 
-        Paciente newPaciente = mapPaciente(paciente);
-
-        CustomMap<String, Object> mapResponse = pacienteService.update(id, newPaciente);
+        CustomMap<String, Object> mapResponse = pacienteService.update(id, paciente);
 
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
@@ -68,24 +65,6 @@ public class PacienteController {
         CustomMap<String, Object> mapResponse = pacienteService.delete(id);
 
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
-
-    }
-
-    // Método privado para mapear CreatePacienteDTO a Paciente
-    private Paciente mapPaciente(CreatePacienteDTO paciente) {
-
-        Paciente newPaciente = new Paciente();
-
-        newPaciente.setNombre(paciente.getNombre());
-        newPaciente.setApellido(paciente.getApellido());
-        newPaciente.setSexo(paciente.getSexo());
-        newPaciente.setCorreoElectronico(paciente.getCorreoElectronico());
-        newPaciente.setNumeroTelefono(paciente.getNumeroTelefono());
-        newPaciente.setDireccion(paciente.getDireccion());
-        newPaciente.setFechaNacimiento(paciente.getFechaNacimiento());
-        newPaciente.setPrioridad(paciente.getPrioridad());
-
-        return newPaciente;
 
     }
 

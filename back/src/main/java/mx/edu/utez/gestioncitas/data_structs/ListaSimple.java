@@ -1,77 +1,104 @@
 package mx.edu.utez.gestioncitas.data_structs;
 
 import java.util.AbstractList;
-import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 public class ListaSimple<T> extends AbstractList<T> {
 
+    /**
+     * Nodo cabeza de la lista y la cola, además del tamaño de la lista.
+     */
     private Nodo<T> head;
+    private Nodo<T> tail;
     private int size;
 
+    /**
+     * Constructor de la lista simple.
+     */
     public ListaSimple() {
         this.head = null;
+        this.tail = null;
         this.size = 0;
     }
 
-    // ========== MÉTODOS REQUERIDOS POR AbstractList ==========
 
+    /**
+     * Obtiene el elemento en la posición idx.
+     * @param idx índice del elemento a obtener
+     * @return el elemento en la posición idx
+     */
     @Override
-    public T get(int index) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException("Índice: " + index + ", Tamaño: " + size);
-        }
+    public T get(int idx) {
+
+        checkIndex(idx);
+
+        if (idx == 0)
+            return tail.getData();
 
         Nodo<T> current = head;
-        for (int i = 0; i < index; i++) {
+
+        for(int i = 0; i < idx; i++)
             current = current.getNext();
-        }
 
         return current.getData();
     }
 
+    /**
+     * Obtiene el tamaño de la lista.
+     * @return el tamaño de la lista
+     */
     @Override
     public int size() {
         return size;
     }
 
+    /**
+     * Agrega un elemento al final de la lista.
+     * @param data el elemento a agregar
+     * @return true si el elemento fue agregado exitosamente
+     */
     @Override
     public boolean add(T data) {
         Nodo<T> newNode = new Nodo<>(data);
 
-        if (isEmpty()) {
+        if (isEmpty())
             head = newNode;
-        } else {
-            Nodo<T> current = head;
-            while (current.getNext() != null) {
-                current = current.getNext();
-            }
-            current.setNext(newNode);
-        }
+        else
+             tail.setNext(newNode);
 
+        tail = newNode;
         size++;
         modCount++;
         return true;
     }
 
+    /**
+     * Remueve el elemento en la posición idx.
+     * @param idx índice del elemento a remover
+     * @return el elemento removido
+     */
     @Override
-    public T remove(int index) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException("Índice: " + index + ", Tamaño: " + size);
-        }
+    public T remove(int idx) {
+        checkIndex(idx);
 
         T removedData;
 
-        if (index == 0) {
+        if (idx == 0) {
             removedData = head.getData();
             head = head.getNext();
         } else {
+
             Nodo<T> current = head;
-            for (int i = 0; i < index - 1; i++) {
+
+            for (int i = 0; i < idx - 1; i++)
                 current = current.getNext();
-            }
+
             removedData = current.getNext().getData();
             current.setNext(current.getNext().getNext());
+
+            if (idx == size - 1)
+                tail = current;
+
         }
 
         size--;
@@ -79,6 +106,9 @@ public class ListaSimple<T> extends AbstractList<T> {
         return removedData;
     }
 
+    /**
+     * Limpia la lista.
+     */
     @Override
     public void clear() {
         head = null;
@@ -86,12 +116,27 @@ public class ListaSimple<T> extends AbstractList<T> {
         modCount++;
     }
 
-    // ========== MÉTODOS ADICIONALES ÚTILES ==========
-
+    /**
+     * Verifica si la lista está vacía.
+     * @return true si la lista está vacía, false en caso contrario
+     */
     public boolean isEmpty() {
         return head == null;
     }
 
+    /**
+     * Verifica si el índice es válido.
+     * @param idx índice a verificar
+     */
+    private void checkIndex(int idx) {
+        if (idx < 0 || idx >= size) {
+            throw new IndexOutOfBoundsException("Index: " + idx + ", Size: " + size);
+        }
+    }
+
+    /**
+     * Muestra los elementos de la lista.
+     */
     public void display() {
         if (isEmpty()) {
             System.out.println("Lista vacía");
@@ -106,6 +151,12 @@ public class ListaSimple<T> extends AbstractList<T> {
         System.out.println("null");
     }
 
+    /**
+     * Busca un elemento por su ID utilizando una función para obtener el ID del elemento.
+     * @param id el ID a buscar
+     * @param idGetter función que obtiene el ID del elemento
+     * @return el elemento encontrado o null si no se encuentra
+     */
     public T findById(Integer id, Function<T, Integer> idGetter) {
         Nodo<T> current = head;
         while (current != null) {

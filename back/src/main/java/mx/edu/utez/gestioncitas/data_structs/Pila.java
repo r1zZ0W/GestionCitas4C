@@ -1,8 +1,5 @@
 package mx.edu.utez.gestioncitas.data_structs;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Pila<T> {
 
     private Nodo<T> top; // el último que llegó (el más reciente)

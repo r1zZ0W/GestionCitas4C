@@ -1,10 +1,12 @@
 package mx.edu.utez.gestioncitas.data_structs;
 
-import java.util.AbstractQueue;
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.lang.NonNull;
 
-public class Cola<T> {
+import java.util.AbstractQueue;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class Cola<T> extends AbstractQueue<T> {
 
     private Nodo<T> front; // el primero en llegar
     private Nodo<T> rear;  // el último en llegar
@@ -16,100 +18,80 @@ public class Cola<T> {
         this.size = 0;
     }
 
-    public boolean isEmpty() {
-        return front == null;
-    }
+    /**
+     * Inserta un elemento a la cola
+    */
+    @Override
+    public boolean offer(T e) {
+        if (e == null) throw new NullPointerException();
 
-    public int size() {
-        return size;
-    }
-
-    public void enqueue(T data) { // primero en llegar, primero en salir
-
-        Nodo<T> newNode = new Nodo<>(data);
-
-        if (isEmpty()) {
+        Nodo<T> newNode = new Nodo<>(e);
+        if (size == 0) {
             front = newNode;
             rear = newNode;
         } else {
             rear.setNext(newNode);
-            rear = newNode; // se va al final de la cola
+            rear = newNode;
         }
         size++;
+        return true;
     }
 
-    public T dequeue() { // saca al primero de la cola 
-
-        if (isEmpty()) {
-            return null;
-        }
+    /**
+     * Desencola el primer elemento de la cola y lo devuelve
+     */
+    @Override
+    public T poll() {
+        if (size == 0) return null;
 
         T data = front.getData();
         front = front.getNext();
 
         if (front == null) {
-            rear = null; // si no hay nadie, la cola está vacía
+            rear = null;
         }
-
         size--;
         return data;
     }
 
+    /**
+     * Ve el elemento sin sacarlo de la cola
+     */
+    @Override
     public T peek() {
-
-        if (isEmpty()) {
-            return null;
-        }
+        if (size == 0) return null;
         return front.getData();
     }
 
-    public void display() {
-
-        if (isEmpty()) {
-            System.out.println("Cola vacía");
-            return;
-        }
-
-        Nodo<T> current = front;
-        System.out.print("Cola (FIFO): ");
-        while (current != null) {
-            System.out.print(current.getData() + " <- ");
-            current = current.getNext();
-        }
-        System.out.println("null");
+    /**
+     *  Devuelve el tamaño de la cola para saber si está vacia o no
+     */
+    @Override
+    public int size() {
+        return size;
     }
 
-    public ListaSimple<T> toList() {
-        ListaSimple<T> result = new ListaSimple<>();
-        Nodo<T> current = front;
+    /**
+     * Devuelve un iterador para recorrer la cola y así obtener métodos como toString y así xD
+     */
+    @Override
+    @NonNull
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            private Nodo<T> current = front;
 
-        while (current != null) {
-            result.add(current.getData());
-            current = current.getNext();
-        }
-
-        return result;
-    }
-
-    public boolean search(T data) {
-
-        Nodo<T> current = front;
-        while (current != null) {
-
-            if (current.getData().equals(data)) {
-                return true;
+            @Override
+            public boolean hasNext() {
+                return current != null;
             }
 
-            current = current.getNext();
-        }
-
-        return false;
+            @Override
+            public T next() {
+                if (current == null) throw new NoSuchElementException();
+                T data = current.getData();
+                current = current.getNext();
+                return data;
+            }
+        };
     }
-
-    public void clear() {
-        front = null;
-        rear = null;
-        size = 0;
-    }
-
 }

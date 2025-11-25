@@ -42,10 +42,9 @@ public class CitaController {
     @PostMapping("") // Petición POST para crear una nueva cita
     public ResponseEntity<Object> create(@RequestBody CreateCitaDTO cita) {
 
-        Cita newCita = mapCita(cita);
-        CustomMap<String, Object> mapResponse = citaService.create(newCita);
+        CustomMap<String, Object> mapResponse = citaService.create(cita);
 
-        System.out.println(newCita);
+        System.out.println(cita);
 
         return new ResponseEntity<>(mapResponse, HttpStatus.CREATED);
 
@@ -55,9 +54,7 @@ public class CitaController {
     public ResponseEntity<Object> update(@RequestBody CreateCitaDTO cita,
                                          @PathVariable Integer id) {
 
-        Cita newCita = mapCita(cita);
-
-        CustomMap<String, Object> mapResponse = citaService.update(id, newCita);
+        CustomMap<String, Object> mapResponse = citaService.update(id, cita);
 
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
@@ -136,21 +133,6 @@ public class CitaController {
         }
         
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
-    }
-
-    private Cita mapCita(CreateCitaDTO cita) {
-
-        Cita newCita = new Cita();
-
-        newCita.setFecha(cita.getFecha());
-        newCita.setHora(cita.getHora());
-        newCita.setPaciente(cita.getPaciente());
-        newCita.setMedicoAsignado(cita.getMedicoAsignado());
-        newCita.setMotivoConsulta(cita.getMotivoConsulta());
-        newCita.setEstado(cita.getEstado());
-
-        return newCita;
-
     }
 
 }
