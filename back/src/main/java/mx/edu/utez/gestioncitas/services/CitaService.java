@@ -5,18 +5,25 @@ import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
 import mx.edu.utez.gestioncitas.data_structs.Pila;
 
+import java.util.ArrayList;
+
+
 import mx.edu.utez.gestioncitas.dtos.CreateCitaDTO;
 
 import mx.edu.utez.gestioncitas.model.Cita;
+import mx.edu.utez.gestioncitas.model.Paciente;
+import mx.edu.utez.gestioncitas.model.Medico;
 
 import mx.edu.utez.gestioncitas.repository.CitaRepository;
-
 import org.springframework.stereotype.Service;
 
 
 @Service
 public class CitaService {
 
+    /**
+     * Repositorio JPA para operaciones CRUD en la entidad Cita al igual que la gestión de la cola de citas pendientes y el historial de citas atendidas utilizando una pila.
+     */
     /**
      * Repositorio JPA para operaciones CRUD en la entidad Cita al igual que la gestión de la cola de citas pendientes y el historial de citas atendidas utilizando una pila.
      */
@@ -45,15 +52,14 @@ public class CitaService {
 
     /**
      * Obtiene todas las citas desde la base de datos
+     * Usa ArrayList para la serialización JSON para evitar problemas con ListaSimple
      */
     public CustomMap<String, Object> getAll() {
-
         CustomMap<String, Object> mapResponse = new CustomMap<>();
-        ListaSimple<Cita> listaCitas = new ListaSimple<>();
-
+        // Usar ArrayList para la serialización JSON (ListaSimple causa problemas con Jackson)
+        ArrayList<Cita> listaCitas = new ArrayList<>();
         listaCitas.addAll(citaRepository.findAll());
         mapResponse.put("listCitas", listaCitas);
-
         return mapResponse;
     }
 
@@ -62,14 +68,11 @@ public class CitaService {
      */
     public CustomMap<String, Object> getById(Integer id) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
-
         Cita cita = citaRepository.findById(id).orElse(null);
-
         if (cita == null) {
             mapResponse.put("error", "No se pudo encontrar la cita con ID: " + id);
             return mapResponse;
         }
-
         mapResponse.put("cita", cita);
         return mapResponse;
     }
@@ -85,7 +88,6 @@ public class CitaService {
             return mapResponse;
         }
 
-        // Validaciones básicas
         if (cita.getFecha() == null || cita.getHora() == null) {
             mapResponse.put("error", "La fecha y hora son obligatorias");
             return mapResponse;
@@ -96,17 +98,13 @@ public class CitaService {
             return mapResponse;
         }
 
-        // Establecer estado inicial si no se proporcionó
         if (cita.getEstado() == null) {
             cita.setEstado('P'); // P = Programada
         }
 
         Cita nuevaCita = mapCita(cita);
-
-        // Guardar en BD (JPA genera el ID automáticamente)
         Cita citaGuardada = citaRepository.save(nuevaCita);
 
-        // Agregar a la cola si está activa o programada
         if (citaGuardada.getEstado() == 'A' || citaGuardada.getEstado() == 'P') {
             colaCitasPendientes.offer(citaGuardada);
         }
@@ -131,7 +129,6 @@ public class CitaService {
             return mapResponse;
         }
 
-        // Actualizar campos
         if (cita.getFecha() != null) {
             citaExistente.setFecha(cita.getFecha());
         }
@@ -151,7 +148,6 @@ public class CitaService {
             citaExistente.setEstado(cita.getEstado());
         }
 
-        // Guardar cambios en BD
         Cita citaActualizada = citaRepository.save(citaExistente);
 
         mapResponse.put("cita", citaActualizada);
@@ -187,18 +183,14 @@ public class CitaService {
      * @return entidad Cita mapeada
      */
     private Cita mapCita(CreateCitaDTO cita) {
-
         Cita newCita = new Cita();
-
         newCita.setFecha(cita.getFecha());
         newCita.setHora(cita.getHora());
         newCita.setPaciente(cita.getPaciente());
         newCita.setMedicoAsignado(cita.getMedicoAsignado());
         newCita.setMotivoConsulta(cita.getMotivoConsulta());
         newCita.setEstado(cita.getEstado());
-
         return newCita;
-
     }
 
     /**

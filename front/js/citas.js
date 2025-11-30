@@ -14,7 +14,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     await cargarPacientes();
     await cargarMedicos();
     await listarCitas();
+    
+    // Función para llenar el formulario con valores de prueba (solo para desarrollo)
+    llenarFormularioPrueba();
 });
+
+// Función para llenar el formulario con valores de prueba
+function llenarFormularioPrueba() {
+    // Establecer fecha de hoy
+    const hoy = new Date();
+    const fechaStr = hoy.toISOString().split('T')[0];
+    inpFecha.value = fechaStr;
+    
+    // Establecer hora actual + 1 hora
+    const hora = new Date();
+    hora.setHours(hora.getHours() + 1);
+    const horaStr = hora.toTimeString().slice(0, 5);
+    inpHora.value = horaStr;
+    
+    // Establecer motivo de consulta de prueba
+    inpMotivoConsulta.value = 'Consulta de prueba ' + Date.now();
+    
+    // Establecer estado por defecto
+    selectEstado.value = 'P';
+    
+    // Seleccionar primer paciente y médico disponibles (si existen)
+    setTimeout(() => {
+        if (selectPaciente.options.length > 1) {
+            selectPaciente.selectedIndex = 1; // Primera opción después de "Seleccione..."
+        }
+        if (selectMedico.options.length > 1) {
+            selectMedico.selectedIndex = 1; // Primera opción después de "Seleccione..."
+        }
+    }, 500); // Esperar a que se carguen los selects
+}
 
 // Función para cargar pacientes
 async function cargarPacientes() {
@@ -89,8 +122,8 @@ document.getElementById('formCita').addEventListener('submit', async (e) => {
 
     obj.fecha = inpFecha.value;
     obj.hora = inpHora.value;
-    obj.paciente = paciente; // Objeto completo
-    obj.medicoAsignado = medico; // Objeto completo
+    obj.paciente = paciente;
+    obj.medicoAsignado = medico;
     obj.motivoConsulta = inpMotivoConsulta.value;
     obj.estado = selectEstado.value;
 
@@ -134,44 +167,34 @@ async function listarCitas() {
     const jsonResponse = await response.json();
     const listaCitas = jsonResponse.listCitas;
 
-    listaCitas.forEach(element => {
-        console.log(`Cita: ${element.motivoConsulta}`);
-    });
-
     let htmlTable = '';
 
     for (let i = 0; i < listaCitas.length; i++) {
-
         const cita = listaCitas[i];
+        const fecha = cita.fecha || 'N/A';
+        const fechaHora = cita.hora ? cita.hora.substring(0, 5) : 'N/A';
+        const motivoConsulta = cita.motivoConsulta || 'N/A';
+        const estado = cita.estado || 'N/A';
+        
         let estadoTexto = '';
-        switch (cita.estado) {
-            case 'P':
-                estadoTexto = 'Programada';
-                break;
-            case 'C':
-                estadoTexto = 'Cancelada';
-                break;
-            case 'F':
-                estadoTexto = 'Finalizada';
-                break;
-            case 'R':
-                estadoTexto = 'Reagendada';
-                break;
-            default:
-                estadoTexto = cita.estado || 'N/A';
+        switch (estado) {
+            case 'P': estadoTexto = 'Programada'; break;
+            case 'C': estadoTexto = 'Cancelada'; break;
+            case 'F': estadoTexto = 'Finalizada'; break;
+            case 'R': estadoTexto = 'Reagendada'; break;
+            default: estadoTexto = estado;
         }
         const pacienteNombre = cita.paciente ? `${cita.paciente.nombre} ${cita.paciente.apellido}` : 'N/A';
         const medicoNombre = cita.medicoAsignado ? `${cita.medicoAsignado.nombre} ${cita.medicoAsignado.apellido}` : 'N/A';
-        const fechaHora = cita.hora ? cita.hora.substring(0, 5) : 'N/A';
 
         htmlTable += `
         <tr>
             <td>${i + 1}</td>
-            <td>${cita.fecha || 'N/A'}</td>
+            <td>${fecha}</td>
             <td>${fechaHora}</td>
             <td>${pacienteNombre}</td>
             <td>${medicoNombre}</td>
-            <td>${cita.motivoConsulta || 'N/A'}</td>
+            <td>${motivoConsulta}</td>
             <td>${estadoTexto}</td>
             <td class="text-center">
                 <button class="btn btn-sm btnEditarCita me-1" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333; padding: 0.25rem 0.5rem;" data-id="${cita.id}" title="Editar">
