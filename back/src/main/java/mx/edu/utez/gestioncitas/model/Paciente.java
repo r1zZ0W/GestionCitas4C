@@ -8,6 +8,13 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa a un Paciente en el sistema de gestión de citas médicas.
+ * Mapea la tabla "paciente" en la base de datos.
+ * Contiene atributos como nombre, apellido, fecha de nacimiento, contacto, sexo y prioridad.
+ * Además, mantiene una lista de citas asociadas al paciente.
+ * @author Tilines Crew
+ */
 @Entity
 @Table(name = "paciente")
 public class Paciente {
@@ -132,7 +139,7 @@ public class Paciente {
     // Metodo toString para pruebas xd
     @Override
     public String toString() {
-        return "--- DATOS DEL PACIENTE ---\n" +
+        return "\n--- DATOS DEL PACIENTE ---\n" +
                 "  ID: " + id + "\n" +
                 "  Nombre: " + nombre + "\n" +
                 "  Apellido: " + apellido + "\n" +

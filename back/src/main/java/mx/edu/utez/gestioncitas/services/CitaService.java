@@ -5,27 +5,21 @@ import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
 import mx.edu.utez.gestioncitas.data_structs.Pila;
 
-import java.util.ArrayList;
-
-
 import mx.edu.utez.gestioncitas.dtos.CreateCitaDTO;
 
 import mx.edu.utez.gestioncitas.model.Cita;
-import mx.edu.utez.gestioncitas.model.Paciente;
-import mx.edu.utez.gestioncitas.model.Medico;
 
 import mx.edu.utez.gestioncitas.repository.CitaRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 
 @Service
 public class CitaService {
 
     /**
-     * Repositorio JPA para operaciones CRUD en la entidad Cita al igual que la gestión de la cola de citas pendientes y el historial de citas atendidas utilizando una pila.
-     */
-    /**
-     * Repositorio JPA para operaciones CRUD en la entidad Cita al igual que la gestión de la cola de citas pendientes y el historial de citas atendidas utilizando una pila.
+     * Repositorio JPA para operaciones CRUD en la entidad Cita al igual que la gestión de
+     * la cola de citas pendientes y el historial de citas atendidas utilizando una pila.
      */
     private final CitaRepository citaRepository;
     private final Cola<Cita> colaCitasPendientes = new Cola<>();
@@ -33,6 +27,7 @@ public class CitaService {
 
     /**
      *Constructor para inyección de dependencias y carga inicial de citas pendientes
+     * @param citaRepository Repositorio JPA para la entidad Cita
      */
     public CitaService(CitaRepository citaRepository) {
         this.citaRepository = citaRepository;
@@ -52,12 +47,13 @@ public class CitaService {
 
     /**
      * Obtiene todas las citas desde la base de datos
-     * Usa ArrayList para la serialización JSON para evitar problemas con ListaSimple
+     * @return CustomMap con la lista de todas las citas
      */
     public CustomMap<String, Object> getAll() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
+
         // Usar ArrayList para la serialización JSON (ListaSimple causa problemas con Jackson)
-        ArrayList<Cita> listaCitas = new ArrayList<>();
+        ListaSimple<Cita> listaCitas = new ListaSimple<>();
         listaCitas.addAll(citaRepository.findAll());
         mapResponse.put("listCitas", listaCitas);
         return mapResponse;
@@ -65,69 +61,128 @@ public class CitaService {
 
     /**
      * Obtiene una cita por su ID
+     * @param id ID de la cita a buscar
+     * @return mapa con la cita encontrada o error si no existe
      */
     public CustomMap<String, Object> getById(Integer id) {
+        
         CustomMap<String, Object> mapResponse = new CustomMap<>();
-        Cita cita = citaRepository.findById(id).orElse(null);
-        if (cita == null) {
-            mapResponse.put("error", "No se pudo encontrar la cita con ID: " + id);
+        Optional<Cita> optCita = citaRepository.findById(id);
+        
+        if (optCita.isPresent()) {
+            
+            Cita cita = optCita.get();
+            mapResponse.put("message", "Cita encontrada");
+            mapResponse.put("cita", cita);
+            mapResponse.put("code", 200);
+        
+        } else {
+            
+            mapResponse.put("message", "Cita no encontrada con ID: " + id);
+            mapResponse.put("cita", null);
+            mapResponse.put("code", 404);
+            
             return mapResponse;
+        
         }
-        mapResponse.put("cita", cita);
+        
         return mapResponse;
     }
 
     /**
      * Crea una nueva cita en la BD y la agrega a la cola de pendientes
+     * @param cita DTO con los datos de la nueva cita
+     * @return mapa con la cita creada con error si faltan datos
      */
     public CustomMap<String, Object> create(CreateCitaDTO cita) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         if (cita == null) {
+
             mapResponse.put("error", "La cita no puede ser nula");
+            mapResponse.put("cita", null);
+            mapResponse.put("code", 400);
+
             return mapResponse;
         }
 
         if (cita.getFecha() == null || cita.getHora() == null) {
+
             mapResponse.put("error", "La fecha y hora son obligatorias");
+            mapResponse.put("cita", cita.getFecha());
+            mapResponse.put("hora", cita.getHora());
+            mapResponse.put("code", 400);
+
             return mapResponse;
         }
 
         if (cita.getPaciente() == null || cita.getMedicoAsignado() == null) {
+
             mapResponse.put("error", "El paciente y médico son obligatorios");
+            mapResponse.put("paciente", cita.getPaciente());
+            mapResponse.put("medicoAsignado", cita.getMedicoAsignado());
+            mapResponse.put("code", 400);
+
             return mapResponse;
         }
 
-        if (cita.getEstado() == null) {
+        if (cita.getEstado() == null)
             cita.setEstado('P'); // P = Programada
-        }
 
         Cita nuevaCita = mapCita(cita);
-        Cita citaGuardada = citaRepository.save(nuevaCita);
+        citaRepository.save(nuevaCita);
 
-        if (citaGuardada.getEstado() == 'A' || citaGuardada.getEstado() == 'P') {
-            colaCitasPendientes.offer(citaGuardada);
-        }
+        if (nuevaCita.getEstado() == 'A' || nuevaCita.getEstado() == 'P')
+            colaCitasPendientes.offer(nuevaCita);
 
-        mapResponse.put("cita", citaGuardada);
+
         mapResponse.put("message", "Cita creada y agregada a la cola de pendientes");
-        mapResponse.put("id", citaGuardada.getId());
+        mapResponse.put("cita", nuevaCita);
+        mapResponse.put("code", 201);
 
         return mapResponse;
     }
 
     /**
-     * Actualiza una cita existente
+     * Actualiza una cita existente por su ID.
+     * @param id ID de la cita a actualizar
+     * @param cita DTO con los datos a actualizar
+     * @return mapa con la cita actualizada o error si no se encuentra
      */
     public CustomMap<String, Object> update(Integer id, CreateCitaDTO cita) {
+
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Cita citaExistente = citaRepository.findById(id).orElse(null);
+        Optional<Cita> optCita = citaRepository.findById(id);
 
-        if (citaExistente == null) {
-            mapResponse.put("error", "Cita no encontrada con ID: " + id);
+        if (optCita.isEmpty()) {
+            
+            mapResponse.put("error", "Cita no encontrada");
+            mapResponse.put("cita", null);
+            mapResponse.put("code", 404);
+                    
             return mapResponse;
         }
+
+        Cita citaExistente = getExistente(cita, optCita);
+        citaRepository.save(citaExistente);
+
+        mapResponse.put("message", "Cita actualizada exitosamente");
+        mapResponse.put("cita", citaExistente);
+        mapResponse.put("code", 200);
+
+        return mapResponse;
+    }
+    
+    /**
+     * Actualiza solo los campos no nulos de la cita existente
+     * @param cita DTO con los datos a actualizar
+     * @param optCita cita existente en la BD
+     * @return cita existente con los campos actualizados
+     */
+    private static Cita getExistente(CreateCitaDTO cita, Optional<Cita> optCita) {
+        
+        Cita citaExistente = optCita.get();
 
         if (cita.getFecha() != null) {
             citaExistente.setFecha(cita.getFecha());
@@ -147,32 +202,35 @@ public class CitaService {
         if (cita.getEstado() != null) {
             citaExistente.setEstado(cita.getEstado());
         }
-
-        Cita citaActualizada = citaRepository.save(citaExistente);
-
-        mapResponse.put("cita", citaActualizada);
-        mapResponse.put("message", "Cita actualizada exitosamente");
-
-        return mapResponse;
+        return citaExistente;
     }
 
     /**
      * Elimina una cita por su ID
+     * @param id ID de la cita a eliminar
+     * @return mapa con la cita eliminada o error si no se encuentra
      */
     public CustomMap<String, Object> delete(Integer id) {
-        CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Cita cita = citaRepository.findById(id).orElse(null);
-
-        if (cita == null) {
-            mapResponse.put("error", "Cita no encontrada con ID: " + id);
+        CustomMap<String, Object> mapResponse = new CustomMap<>(3);
+        Optional<Cita> cita = citaRepository.findById(id);
+        
+        if (cita.isEmpty()) {
+            
+            mapResponse.put("error", "Cita no encontrada");
+            mapResponse.put("cita", null);
+            mapResponse.put("code", 404);
+            
             return mapResponse;
         }
+        
+        Cita citaExistente = cita.get();
 
-        citaRepository.deleteById(id);
+        citaRepository.delete(citaExistente);
 
         mapResponse.put("message", "Cita eliminada correctamente");
-        mapResponse.put("citaEliminada", cita);
+        mapResponse.put("citaEliminada", citaExistente);
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }
@@ -195,6 +253,7 @@ public class CitaService {
 
     /**
      * Obtiene todas las citas pendientes en la cola
+     * @return mapa con la lista de citas pendientes
      */
     public CustomMap<String, Object> getColaCitasPendientes() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -211,6 +270,7 @@ public class CitaService {
 
     /**
      * Obtiene la siguiente cita pendiente sin sacarla de la cola
+     * @return mapa con la siguiente cita o error si no hay citas pendientes
      */
     public CustomMap<String, Object> getSiguienteCitaPendiente() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -228,7 +288,8 @@ public class CitaService {
     }
 
     /**
-     * Atiende la siguiente cita (la saca de la cola y la marca como completada)
+     * Atiende la siguiente cita (la saca de la cola y la marca como completada
+     * @return mapa con la cita atendida o error si no hay citas pendientes
      */
     public CustomMap<String, Object> atenderSiguienteCita() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -247,8 +308,8 @@ public class CitaService {
         // Agregar al historial
         pilaHistorialCitas.push(citaAtendida);
 
-        mapResponse.put("citaAtendida", citaAtendida);
         mapResponse.put("message", "Cita atendida exitosamente. Movida de la cola al historial.");
+        mapResponse.put("citaAtendida", citaAtendida);
         mapResponse.put("citasPendientesRestantes", colaCitasPendientes.size());
 
         return mapResponse;
@@ -256,6 +317,8 @@ public class CitaService {
 
     /**
      * Agrega una cita existente a la cola de pendientes
+     * @param id ID de la cita a agregar
+     * @return mapa con la cita agregada o error si no se encuentra o no es válida
      */
     public CustomMap<String, Object> agregarCitaACola(Integer id) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -283,14 +346,13 @@ public class CitaService {
 
     /**
      * Obtiene el historial de citas procesadas (LIFO)
+     * @return mapa con la lista de citas en el historial
      */
     public CustomMap<String, Object> getHistorialCitas() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         ListaSimple<Cita> listaHistorial = new ListaSimple<>();
-        for (Cita cita : pilaHistorialCitas.toList()) {
-            listaHistorial.add(cita);
-        }
+        listaHistorial.addAll(pilaHistorialCitas.toList());
 
         mapResponse.put("historialCitas", listaHistorial);
         mapResponse.put("tamaño", pilaHistorialCitas.size());
@@ -302,6 +364,7 @@ public class CitaService {
 
     /**
      * Obtiene la última cita procesada sin sacarla del historial
+     * @return mapa con la última cita procesada o error si el historial está vacío
      */
     public CustomMap<String, Object> getUltimaCitaProcesada() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -320,6 +383,7 @@ public class CitaService {
 
     /**
      * Revierte la última cita procesada (la saca del historial y la vuelve a la cola)
+     * @return mapa con la cita revertida o error si el historial está vacío
      */
     public CustomMap<String, Object> revertirUltimaCita() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();

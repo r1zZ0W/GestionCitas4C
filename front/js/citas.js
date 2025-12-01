@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await cargarPacientes();
     await cargarMedicos();
     await listarCitas();
+    await cargarPacientesPrioridad();
     
     // Función para llenar el formulario con valores de prueba (solo para desarrollo)
     llenarFormularioPrueba();
@@ -47,6 +48,42 @@ function llenarFormularioPrueba() {
             selectMedico.selectedIndex = 1; // Primera opción después de "Seleccione..."
         }
     }, 500); // Esperar a que se carguen los selects
+}
+
+async function cargarPacientesPrioridad() {
+
+    const URL = 'http://localhost:8080/api/paciente/prioridad/asc';
+    const response = await fetch(URL, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    console.log(response);
+
+    const jsonResponse = await response.json();
+    const listaPacientes = jsonResponse.listPacientes;
+
+    let htmlTable = '';
+
+    for (let i = 0; i < listaPacientes.length; i++) {
+        const paciente = listaPacientes[i];
+        htmlTable += `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${paciente.nombre} ${paciente.apellido}</td>
+            <td>${paciente.prioridad}</td>
+            <td>
+                <button class="btn btn-sm btnAtenderCita me-1" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333; padding: 0.25rem 0.5rem;" data-id="${paciente.id}" title="Atender">
+                    Atender
+                </button>
+            </td> 
+        </tr>
+        `;
+    }
+
+    tbodyPrioridad.innerHTML = htmlTable;
 }
 
 // Función para cargar pacientes

@@ -8,8 +8,6 @@ import mx.edu.utez.gestioncitas.repository.MedicoRepository;
 
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class MedicoService {
 
@@ -26,12 +24,9 @@ public class MedicoService {
     public CustomMap<String, Object> getAll() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        List<Medico> medicos = medicoRepository.findAll();
         ListaSimple<Medico> listaMedicos = new ListaSimple<>();
 
-        for (Medico medico : medicos) {
-            listaMedicos.add(medico);
-        }
+        listaMedicos.addAll(medicoRepository.findAll());
 
         mapResponse.put("listMedicos", listaMedicos);
         mapResponse.put("total", listaMedicos.size());
@@ -180,14 +175,17 @@ public class MedicoService {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         if (especialidad == null || especialidad.trim().isEmpty()) {
+
             mapResponse.put("error", "La especialidad no puede estar vacía");
+            mapResponse.put("listMedicos", null);
+            mapResponse.put("code", 404);
+
             return mapResponse;
         }
 
-        List<Medico> medicos = medicoRepository.findAll();
         ListaSimple<Medico> medicosFiltrados = new ListaSimple<>();
 
-        for (Medico medico : medicos) {
+        for (Medico medico : medicoRepository.findAll()) {
             if (medico.getEspecialidad() != null &&
                     medico.getEspecialidad().toLowerCase().contains(especialidad.toLowerCase())) {
                 medicosFiltrados.add(medico);
@@ -195,14 +193,17 @@ public class MedicoService {
         }
 
         if (medicosFiltrados.isEmpty()) {
+
             mapResponse.put("message", "No se encontraron médicos con esa especialidad");
-            mapResponse.put("listMedicos", medicosFiltrados);
+            mapResponse.put("listMedicos", null);
+            mapResponse.put("code", 404);
+
             return mapResponse;
         }
 
+        mapResponse.put("message", "Se encontraron médicos con la especialidad: " + especialidad);
         mapResponse.put("listMedicos", medicosFiltrados);
-        mapResponse.put("total", medicosFiltrados.size());
-        mapResponse.put("especialidadBuscada", especialidad);
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }
@@ -214,14 +215,17 @@ public class MedicoService {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         if (numeroConsultorio == null) {
+
             mapResponse.put("error", "El número de consultorio no puede ser nulo");
+            mapResponse.put("listMedicos", null);
+            mapResponse.put("code", 404);
+
             return mapResponse;
         }
 
-        List<Medico> medicos = medicoRepository.findAll();
         Medico medicoEncontrado = null;
 
-        for (Medico medico : medicos) {
+        for (Medico medico : medicoRepository.findAll()) {
             if (medico.getNumeroConsultorio() != null &&
                     medico.getNumeroConsultorio().equals(numeroConsultorio)) {
                 medicoEncontrado = medico;

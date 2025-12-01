@@ -6,6 +6,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * Entidad que representa una Cita en el sistema de gestión de citas médicas.
+ * Contiene información sobre la fecha, hora, paciente, médico asignado,
+ * motivo de consulta y estado de la cita.
+ * @author Tilines Crew
+ */
 @Entity
 @Table(name = "cita")
 public class Cita {
@@ -98,6 +104,7 @@ public class Cita {
     }
 
     // toString para pruebas y que se vean los datos vaya
+    @Override
     public String toString() {
 
         String estadoDescripcion = switch (estado) {
@@ -108,7 +115,7 @@ public class Cita {
             default -> "Desconocido";
         };
 
-        return "--- DATOS DE LA CITA ---\n" +
+        return "\n--- DATOS DE LA CITA ---\n" +
                 "  ID: " + id + "\n" +
                 "  Fecha: " + fecha + "\n" +
                 "  Hora: " + hora + "\n" +

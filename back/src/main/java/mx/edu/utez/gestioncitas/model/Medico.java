@@ -2,6 +2,12 @@ package mx.edu.utez.gestioncitas.model;
 
 import jakarta.persistence.*;
 
+/**
+ * Entidad que representa a un Médico en el sistema de gestión de citas médicas.
+ * Contiene atributos como nombre, apellido, especialidad y número de consultorio.
+ * Mapea a la tabla "medico" en la base de datos.
+ * @author Tilines Crew
+ */
 @Entity
 @Table(name = "medico")
 public class Medico {
@@ -66,8 +72,9 @@ public class Medico {
         this.numeroConsultorio = numeroConsultorio;
     }
 
+    @Override
     public String toString() {
-        return "--- DATOS DEL MÉDICO ---\n" +
+        return "\n--- DATOS DEL MÉDICO ---\n" +
                 "  ID: " + id + "\n" +
                 "  Nombre: " + nombre + "\n" +
                 "  Apellido: " + apellido + "\n" +

@@ -6,6 +6,11 @@ import java.util.AbstractQueue;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * Implementación de una cola genérica utilizando una lista enlazada.
+ * Permite operaciones de encolado, desencolado y visualización del primer elemento.
+ * @param <T> Tipo de elementos almacenados en la cola.
+ */
 public class Cola<T> extends AbstractQueue<T> {
 
     private Nodo<T> front; // el primero en llegar
@@ -20,6 +25,8 @@ public class Cola<T> extends AbstractQueue<T> {
 
     /**
      * Inserta un elemento a la cola
+     * @param e elemento a insertar
+     * @return true si se insertó correctamente
     */
     @Override
     public boolean offer(T e) {
@@ -39,6 +46,7 @@ public class Cola<T> extends AbstractQueue<T> {
 
     /**
      * Desencola el primer elemento de la cola y lo devuelve
+     * @return el primer elemento de la cola o null si está vacía
      */
     @Override
     public T poll() {
@@ -56,6 +64,7 @@ public class Cola<T> extends AbstractQueue<T> {
 
     /**
      * Ve el elemento sin sacarlo de la cola
+     * @return el primer elemento de la cola o null si está vacía
      */
     @Override
     public T peek() {
@@ -65,6 +74,7 @@ public class Cola<T> extends AbstractQueue<T> {
 
     /**
      *  Devuelve el tamaño de la cola para saber si está vacia o no
+     *  @return tamaño de la cola
      */
     @Override
     public int size() {
@@ -73,6 +83,7 @@ public class Cola<T> extends AbstractQueue<T> {
 
     /**
      * Devuelve un iterador para recorrer la cola y así obtener métodos como toString y así xD
+     * @return iterador de la cola
      */
     @Override
     @NonNull

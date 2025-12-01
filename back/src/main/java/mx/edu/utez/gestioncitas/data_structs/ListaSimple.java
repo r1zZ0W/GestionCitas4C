@@ -1,8 +1,21 @@
 package mx.edu.utez.gestioncitas.data_structs;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import mx.edu.utez.gestioncitas.serializers.ListaSimpleDeserializer;
+import mx.edu.utez.gestioncitas.serializers.ListaSimpleSerializer;
+
 import java.util.AbstractList;
+import java.util.Collection;
 import java.util.function.Function;
 
+/**
+ * Clase que representa una lista enlazada simple genérica. Utiliza Serialización y Deserialización personalizada para JSON.
+ * @param <T> el tipo de elementos en la lista
+ */
+@JsonSerialize(using = ListaSimpleSerializer.class)
+@JsonDeserialize(using = ListaSimpleDeserializer.class)
 public class ListaSimple<T> extends AbstractList<T> {
 
     /**
@@ -31,9 +44,6 @@ public class ListaSimple<T> extends AbstractList<T> {
     public T get(int idx) {
 
         checkIndex(idx);
-
-        if (idx == 0)
-            return tail.getData();
 
         Nodo<T> current = head;
 
@@ -135,20 +145,27 @@ public class ListaSimple<T> extends AbstractList<T> {
     }
 
     /**
-     * Muestra los elementos de la lista.
+     * Agrega todos los elementos de una colección a la lista.
+     * @param c la colección de elementos a agregar
+     * @return true si los elementos fueron agregados exitosamente
      */
-    public void display() {
-        if (isEmpty()) {
-            System.out.println("Lista vacía");
-            return;
-        }
+    @Override
+    public boolean addAll(Collection<? extends T> c) {
 
-        Nodo<T> current = head;
-        while (current != null) {
-            System.out.print(current.getData() + " -> ");
-            current = current.getNext();
-        }
-        System.out.println("null");
+        if (c == null)
+            // Estándar en Java para argumentos de colección nulos
+            throw new NullPointerException("La colección a añadir no puede ser nula.");
+
+        boolean modified = false;
+
+        for (T item : c)
+            // Llama a add(item)
+            if (add(item))
+                modified = true;
+
+        // Devuelve true si se añadió al menos un elemento
+        return modified;
+
     }
 
     /**

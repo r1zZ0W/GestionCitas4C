@@ -1,6 +1,12 @@
 package mx.edu.utez.gestioncitas.dtos;
 
-// Esta clase recibe los datos necesarios para crear un nuevo médico en el sistema.
+/**
+ * DTO para crear un nuevo médico.
+ * Contiene los atributos necesarios para la creación de un médico.
+ * Proporciona métodos getters y setters para cada atributo.
+ * Incluye un método toString para representar el objeto como una cadena.
+ * @author Tilines Crew
+ */
 public class CreateMedicoDTO {
 
     // Atributos del médico
@@ -43,6 +49,16 @@ public class CreateMedicoDTO {
 
     public void setNumeroConsultorio(Integer numeroConsultorio) {
         this.numeroConsultorio = numeroConsultorio;
+    }
+
+    @Override
+    public String toString() {
+        return "\n--- DATOS DEL MÉDICO ---\n" +
+                "  Nombre: " + nombre + "\n" +
+                "  Apellido: " + apellido + "\n" +
+                "  Especialidad: " + especialidad + "\n" +
+                "  Número de Consultorio: " + numeroConsultorio + "\n" +
+                "--------------------------";
     }
 
 }

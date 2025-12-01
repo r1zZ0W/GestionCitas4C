@@ -7,6 +7,8 @@ import java.util.*;
 /**
  * Implementación personalizada de Map usando AbstractMap
  * Utiliza una tabla hash con encadenamiento para manejar colisiones
+ * @param <K> Tipo de clave
+ * @param <V> Tipo de valor
  */
 public class CustomMap<K, V> extends AbstractMap<K, V> {
 
@@ -30,13 +32,23 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Clase interna que representa un nodo en la tabla hash
+     * @param <K> Tipo de clave
+     * @param <V> Tipo de valor
      */
     static class Node<K, V> implements Map.Entry<K, V> {
+
+        // Atributos del nodo
         final int hash;
         final K key;
         V value;
         Node<K, V> next;
 
+        /** Constructor del nodo
+         * @param hash Hash de la clave
+         * @param key Clave
+         * @param value Valor
+         * @param next Siguiente nodo en la cadena
+         */
         Node(int hash, K key, V value, Node<K, V> next) {
             this.hash = hash;
             this.key = key;
@@ -44,16 +56,29 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
             this.next = next;
         }
 
+        /**
+         * Obtiene la clave del nodo
+         * @return Clave del nodo
+         */
         @Override
         public K getKey() {
             return key;
         }
 
+        /**
+         * Obtiene el valor del nodo
+         * @return Valor del nodo
+         */
         @Override
         public V getValue() {
             return value;
         }
 
+        /**
+         * Establece un nuevo valor para el nodo
+         * @param newValue Nuevo valor a establecer
+         * @return Valor antiguo del nodo
+         */
         @Override
         public V setValue(V newValue) {
             V oldValue = value;
@@ -61,20 +86,32 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
             return oldValue;
         }
 
+        /**
+         * Compara este nodo con otro objeto para igualdad
+         * @param o Objeto a comparar
+         * @return True si son iguales, false en caso contrario
+         */
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Map.Entry)) return false;
-            Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+            if (!(o instanceof Entry<?, ?> e)) return false;
             return Objects.equals(key, e.getKey()) &&
                     Objects.equals(value, e.getValue());
         }
 
+        /**
+         * Calcula el hash code del nodo
+         * @return Hash code del nodo
+         */
         @Override
         public int hashCode() {
             return Objects.hashCode(key) ^ Objects.hashCode(value);
         }
 
+        /**
+         * Representación en cadena del nodo
+         * @return Cadena en formato "key=value"
+         */
         @Override
         public String toString() {
             return key + "=" + value;
@@ -94,6 +131,8 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Constructor con capacidad inicial
+     * @param initialCapacity Capacidad inicial del mapa
+     * @throws IllegalArgumentException si la capacidad inicial es negativa
      */
     @SuppressWarnings("unchecked")
     public CustomMap(int initialCapacity) {
@@ -109,6 +148,9 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Constructor con capacidad inicial y factor de carga
+     * @param initialCapacity Capacidad inicial del mapa
+     * @param loadFactor Factor de carga del mapa
+     * @throws IllegalArgumentException si la capacidad inicial es negativa o el factor de carga es inválido
      */
     @SuppressWarnings("unchecked")
     public CustomMap(int initialCapacity, float loadFactor) {
@@ -127,6 +169,8 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Calcula el hash del objeto key
+     * @param key Clave a hashear
+     * @return Hash de la clave
      */
     private int hash(Object key) {
         int h;
@@ -135,6 +179,8 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Retorna la siguiente potencia de 2 mayor o igual a cap
+     * @param cap Capacidad deseada
+     * @return Siguiente potencia de 2 mayor o igual a cap
      */
     private int tableSizeFor(int cap) {
         int n = cap - 1;
@@ -148,6 +194,7 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Método requerido por AbstractMap - retorna el conjunto de entradas
+     * @return Conjunto de entradas del mapa
      */
     @Override
     @NonNull
@@ -157,6 +204,9 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Agrega o actualiza un valor en el map
+     * @param key Clave del valor
+     * @param value Valor a asociar con la clave
+     * @return Valor antiguo asociado con la clave, o null si no existía
      */
     @Override
     public V put(K key, V value) {
@@ -165,6 +215,9 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Implementación interna de put
+     * @param hash Hash de la clave
+     * @param key Clave del valor
+     * @param value Valor a asociar con la clave
      */
     private V putValue(int hash, K key, V value) {
         Node<K, V>[] tab = table;
@@ -207,6 +260,8 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Obtiene un valor del map
+     * @param key Clave del valor a obtener
+     * @return Valor asociado con la clave, o null si no existe
      */
     @Override
     public V get(Object key) {
@@ -216,6 +271,9 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Obtiene un nodo del map
+     * @param hash Hash de la clave
+     * @param key Clave del valor a obtener
+     * @return Nodo asociado con la clave, o null si no existe
      */
     private Node<K, V> getNode(int hash, Object key) {
         Node<K, V>[] tab = table;
@@ -237,6 +295,8 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Elimina un elemento del map
+     * @param key Clave del valor a eliminar
+     * @return Valor eliminado, o null si no existía
      */
     @Override
     public V remove(Object key) {
@@ -246,6 +306,9 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Implementación interna de remove
+     * @param hash Hash de la clave
+     * @param key Clave del valor a eliminar
+     * @return Nodo eliminado, o null si no existía
      */
     private Node<K, V> removeNode(int hash, Object key) {
         Node<K, V>[] tab = table;
@@ -276,6 +339,8 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Verifica si el map contiene una clave
+     * @param key Clave a verificar
+     * @return True si la clave existe, false en caso contrario
      */
     @Override
     public boolean containsKey(Object key) {
@@ -284,6 +349,7 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Retorna el tamaño del map
+     * @return Número de entradas en el map
      */
     @Override
     public int size() {
@@ -292,6 +358,7 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Verifica si el map está vacío
+     * @return True si el map está vacío, false en caso contrario
      */
     @Override
     public boolean isEmpty() {
@@ -307,6 +374,51 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
         if (tab != null && size > 0) {
             size = 0;
             Arrays.fill(tab, null);
+        }
+    }
+
+    /**
+     * Inserta el valor solo si la clave no está presente
+     * @param key Clave a insertar
+     * @param value Valor a insertar
+     * @return El valor existente si la clave ya estaba presente, null si se insertó el nuevo valor.
+     */
+    @Override
+    public V putIfAbsent(K key, V value) {
+        int hash = hash(key);
+        Node<K, V>[] tab = table;
+        int n = tab.length;
+        int i = (n - 1) & hash;
+
+        Node<K, V> e = tab[i];
+
+        // Si no existe nodo en el bucket, lo insertamos directamente
+        if (e == null) {
+            tab[i] = new Node<>(hash, key, value, null);
+            if (++size > threshold) {
+                resize();
+            }
+            return null;
+        }
+
+        // Recorrer la cadena
+        Node<K, V> current = e;
+        while (true) {
+
+            // Si la clave ya existe, retornamos su valor sin modificarlo
+            if (current.hash == hash && Objects.equals(key, current.key))
+                return current.value;
+
+            // Llegamos al final de la cadena: insertar nuevo nodo
+            if (current.next == null) {
+                current.next = new Node<>(hash, key, value, null);
+                if (++size > threshold) {
+                    resize();
+                }
+                return null;
+            }
+
+            current = current.next;
         }
     }
 
@@ -347,25 +459,41 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
 
     /**
      * Clase interna para el conjunto de entradas
-     */
+      */
     private class EntrySet extends AbstractSet<Entry<K, V>> {
 
+        /**
+         *  Retorna un iterador para las entradas del map
+         * @return Iterador de entradas
+         */
         @Override
         @NonNull
         public Iterator<Entry<K, V>> iterator() {
             return new EntryIterator();
         }
 
+        /**
+         * Retorna el tamaño del conjunto de entradas
+         * @return Tamaño del conjunto de entradas
+         */
         @Override
         public int size() {
             return size;
         }
 
+        /**
+         * Limpia el conjunto de entradas
+         */
         @Override
         public void clear() {
             CustomMap.this.clear();
         }
 
+        /**
+         * Verifica si el conjunto de entradas contiene una entrada específica
+         * @param o Entrada a verificar
+         * @return True si la entrada existe, false en caso contrario
+         */
         @Override
         public boolean contains(Object o) {
             if (!(o instanceof Entry<?, ?> e)) {
@@ -376,6 +504,11 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
             return candidate != null && candidate.equals(e);
         }
 
+        /**
+         * Elimina una entrada específica del conjunto
+         * @param o Entrada a eliminar
+         * @return True si la entrada fue eliminada, false en caso contrario
+         */
         @Override
         public boolean remove(Object o) {
             if (o instanceof Entry<?, ?> e) {
@@ -395,11 +528,14 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
      * Iterador para las entradas del map
      */
     private class EntryIterator implements Iterator<Entry<K, V>> {
+
+        // Atributos del iterador
         Node<K, V> next;
         Node<K, V> current;
         int index;
         int expectedSize;
 
+        // Constructor del iterador
         EntryIterator() {
             Node<K, V>[] t = table;
             current = next = null;
@@ -411,11 +547,21 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
             }
         }
 
+        /**
+         * Verifica si hay más entradas para iterar
+         * @return True si hay más entradas, false en caso contrario
+         */
         @Override
         public boolean hasNext() {
             return next != null;
         }
 
+        /**
+         * Retorna la siguiente entrada en la iteración
+         * @return Siguiente entrada
+         * @throws ConcurrentModificationException si el mapa ha sido modificado durante la iteración
+         * @throws NoSuchElementException si no hay más elementos para iterar
+         */
         @Override
         public Entry<K, V> next() {
             if (expectedSize != size) {
@@ -439,6 +585,11 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
             return e;
         }
 
+        /**
+         * Elimina la entrada actual de la iteración
+         * @throws IllegalStateException si next() no ha sido llamado antes de remove()
+         * @throws ConcurrentModificationException si el mapa ha sido modificado durante la iteración
+         */
         @Override
         public void remove() {
             Node<K, V> p = current;
@@ -454,4 +605,5 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
             expectedSize = size;
         }
     }
+
 }

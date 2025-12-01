@@ -7,9 +7,19 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
-// Esta clase recibe los datos necesarios para crear una nueva cita en el sistema.
+/**
+ * DTO para crear una nueva cita médica.
+ * Contiene los datos necesarios para programar una cita, incluyendo fecha, hora,
+ * paciente, médico asignado, motivo de consulta y estado de la cita.
+ * Utiliza anotaciones de formateo de fecha y hora para asegurar la compatibilidad
+ * con el frontend.
+ * @author Tilines Crew
+ */
 public class CreateCitaDTO {
 
+    /**
+     * Atributos de la clase CreateCitaDTO
+     */
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fecha;
     @DateTimeFormat(pattern = "HH:mm") // Formateador de hora para compatibilidad en el frontend
@@ -71,4 +81,26 @@ public class CreateCitaDTO {
     public void setEstado(Character estado) {
         this.estado = estado;
     }
+
+    @Override
+    public String toString() {
+
+        String estadoDescripcion = switch (estado) {
+            case 'P' -> "Programada";
+            case 'C' -> "Cancelada";
+            case 'F' -> "Finalizada";
+            case 'R' -> "Reagendada";
+            default -> "Desconocido";
+        };
+
+        return "\n--- DATOS DE LA CITA ---\n" +
+                "  Fecha: " + fecha + "\n" +
+                "  Hora: " + hora + "\n" +
+                "  Paciente: " + paciente.getNombre() + " " + paciente.getApellido() + " (ID: " + paciente.getId() + ")\n" +
+                "  Médico Asignado: " + medicoAsignado.getNombre() + " " + medicoAsignado.getApellido() + " (" + medicoAsignado.getEspecialidad() + ")\n" +
+                "  Motivo de Consulta: " + motivoConsulta + "\n" +
+                "  Estado: " + estadoDescripcion + " (" + estado + ")\n" +
+                "--------------------------";
+    }
+
 }

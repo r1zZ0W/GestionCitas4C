@@ -6,10 +6,14 @@ import mx.edu.utez.gestioncitas.model.Paciente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 /**
- * Repositorio para la entidad Paciente en el que se definen métodos personalizados ocupando JPA
+ * Repositorio JPA para la entidad Paciente.
+ * Proporciona métodos CRUD y consultas personalizadas para gestionar los pacientes en la base de datos.
+ * @author Tilines Crew
  */
+@Repository
 public interface PacienteRepository extends JpaRepository<Paciente, Integer> {
 
     /**
@@ -19,13 +23,6 @@ public interface PacienteRepository extends JpaRepository<Paciente, Integer> {
      * @return Una lista simple de pacientes con la prioridad especificada
      */
     ListaSimple<Paciente> findByPrioridad(Integer prioridad);
-
-    /**
-     * Busca todos los pacientes ordenados por prioridad ascendente
-     *
-     * @return Una lista simple de pacientes ordenados por prioridad ascendente
-     */
-    ListaSimple<Paciente> findAllByOrderByPrioridadAsc();
 
     /**
      * Busca pacientes por nombre o apellido utilizando una consulta personalizada

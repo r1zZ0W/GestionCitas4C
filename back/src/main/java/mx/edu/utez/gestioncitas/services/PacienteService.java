@@ -2,16 +2,26 @@ package mx.edu.utez.gestioncitas.services;
 
 import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
+import mx.edu.utez.gestioncitas.data_structs.MergeSort;
 import mx.edu.utez.gestioncitas.dtos.CreatePacienteDTO;
 import mx.edu.utez.gestioncitas.model.Paciente;
 import mx.edu.utez.gestioncitas.repository.PacienteRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 
+/**
+ * Servicio para gestionar las operaciones relacionadas con los pacientes.
+ * Proporciona métodos para crear, leer, actualizar y eliminar pacientes.
+ * Utiliza PacienteRepository para interactuar con la base de datos
+ * y CustomMap para las respuestas personalizadas.
+ * @author Tilines Crew
+ */
 @Service
 public class PacienteService {
 
+    // Repositorio de Paciente inyectado
     private final PacienteRepository pacienteRepository;
 
     // Constructor para inyección de dependencias
@@ -21,6 +31,7 @@ public class PacienteService {
 
     /**
      * Obtiene todos los pacientes desde la base de datos
+     * @return Mapa con la lista de pacientes y un mensaje de éxito
      */
     public CustomMap<String, Object> getAll() {
 
@@ -29,72 +40,98 @@ public class PacienteService {
 
         listaPacientes.addAll(pacienteRepository.findAll());
 
+        mapResponse.put("message", "Lista de pacientes obtenida exitosamente");
         mapResponse.put("listPacientes", listaPacientes);
-        mapResponse.put("total", listaPacientes.size());
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }
 
     /**
      * Obtiene un paciente por su ID
+     * @param id ID del paciente a buscar
+     * @return Mapa con el paciente encontrado o un mensaje de error
      */
     public CustomMap<String, Object> getById(Integer id) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Paciente paciente = pacienteRepository.findById(id).orElse(null);
+        Optional<Paciente> optPaciente = pacienteRepository.findById(id);
 
-        if (paciente == null) {
+        if (optPaciente.isEmpty()) {
+
             mapResponse.put("error", "No se pudo encontrar el paciente con ID: " + id);
+            mapResponse.put("paciente", null);
+            mapResponse.put("code", 404);
+
             return mapResponse;
         }
 
+        Paciente paciente = optPaciente.get();
+
+        mapResponse.put("message", "Paciente encontrado exitosamente");
         mapResponse.put("paciente", paciente);
+        mapResponse.put("code", 200);
+
         return mapResponse;
     }
 
     /**
      * Crea un nuevo paciente en la base de datos
+     * @param paciente DTO con los datos del paciente a crear
+     * @return Mapa con el paciente creado o un mensaje de error
      */
     public CustomMap<String, Object> create(CreatePacienteDTO paciente) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
         if (paciente == null) {
+
             mapResponse.put("error", "El paciente no puede ser nulo");
+            mapResponse.put("paciente", null);
+            mapResponse.put("code", 400);
             return mapResponse;
+
         }
 
         // Establecer prioridad por defecto si no viene
-        if (paciente.getPrioridad() == null) {
+        if (paciente.getPrioridad() == null)
             paciente.setPrioridad(3); // Baja por defecto
-        }
 
         // Mapear DTO a entidad Paciente para guardar en BD
         Paciente nuevoPaciente = mapPaciente(paciente);
 
         // Guardar en BD
-        Paciente pacienteGuardado = pacienteRepository.save(nuevoPaciente);
+        pacienteRepository.save(nuevoPaciente);
 
-        mapResponse.put("paciente", pacienteGuardado);
         mapResponse.put("message", "Paciente creado exitosamente");
-        mapResponse.put("id", pacienteGuardado.getId());
+        mapResponse.put("paciente", nuevoPaciente);
+        mapResponse.put("code", 201);
 
         return mapResponse;
 
     }
 
     /**
-     * Actualiza un paciente existente
+     * Actualiza un paciente existente en la base de datos
+     * @param id ID del paciente a actualizar
+     * @param paciente DTO con los datos del paciente a actualizar
+     * @return Mapa con el paciente actualizado o un mensaje de error
      */
     public CustomMap<String, Object> update(Integer id, CreatePacienteDTO paciente) {
 
         CustomMap<String, Object> mapResponse = new CustomMap<>();
+        Optional<Paciente> optPaciente = pacienteRepository.findById(id); // Buscar paciente por ID, y regresa un Optional
 
-        Paciente pacienteExistente = pacienteRepository.findById(id).orElse(null);
+        // Verificar si el paciente existe
+        if (optPaciente.isEmpty()) {
 
-        if (pacienteExistente == null) {
             mapResponse.put("error", "Paciente no encontrado con ID: " + id);
+            mapResponse.put("paciente", null);
+            mapResponse.put("code", 404);
+
             return mapResponse;
         }
+
+        Paciente pacienteExistente = optPaciente.get();
 
         // Actualizar campos solo si vienen con datos
         if (paciente.getNombre() != null && !paciente.getNombre().trim().isEmpty())
@@ -123,10 +160,12 @@ public class PacienteService {
             pacienteExistente.setPrioridad(paciente.getPrioridad());
 
         // Guardar cambios en BD
-        Paciente pacienteActualizado = pacienteRepository.save(pacienteExistente);
+        pacienteRepository.save(pacienteExistente);
 
-        mapResponse.put("paciente", pacienteActualizado);
+        // Se envía los datos del paciente actualizado, junto con un código 200
         mapResponse.put("message", "Paciente actualizado exitosamente");
+        mapResponse.put("paciente", pacienteExistente);
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }
@@ -155,33 +194,45 @@ public class PacienteService {
     }
 
     /**
-     * Elimina un paciente por su ID
+     * Elimina un paciente por su ID si no tiene citas asociadas
+     * @param id ID del paciente a eliminar
+     * @return Mapa con el resultado de la eliminación o un mensaje de error
      */
     public CustomMap<String, Object> delete(Integer id) {
+
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Paciente paciente = pacienteRepository.findById(id).orElse(null);
+        Optional<Paciente> optPaciente = pacienteRepository.findById(id);
 
-        if (paciente == null) {
-            mapResponse.put("error", "Paciente no encontrado");
+        if (optPaciente.isEmpty()) {
+
+            mapResponse.put("error", "Paciente no encontrado con ID: " + id);
+            mapResponse.put("paciente", null);
+            mapResponse.put("code", 404);
+
             return mapResponse;
         }
+
+        Paciente paciente = optPaciente.get();
 
         if (paciente.getCitas() != null && !paciente.getCitas().isEmpty()) {
             mapResponse.put("error", "No se puede eliminar el paciente con ID: " + id + " porque tiene citas asociadas");
             return mapResponse;
         }
 
-        pacienteRepository.deleteById(id);
+        pacienteRepository.delete(paciente);
 
         mapResponse.put("message", "Paciente eliminado correctamente");
         mapResponse.put("pacienteEliminado", paciente);
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }
 
     /**
      * Busca pacientes por prioridad
+     * @param prioridad Prioridad a buscar: 1 - Alta, 2 - Media, 3 - Baja
+     * @return Mapa con la lista de pacientes encontrados y el total
      */
     public CustomMap<String, Object> getByPrioridad(Integer prioridad) {
 
@@ -202,6 +253,8 @@ public class PacienteService {
 
     /**
      * Busca por nombre o apellido
+     * @param nombre Término de búsqueda
+     * @return Mapa con la lista de pacientes encontrados o un mensaje de error
      */
     public CustomMap<String, Object> buscarPorNombre(String nombre) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -225,18 +278,32 @@ public class PacienteService {
     }
 
     /**
-     * Obtiene ordenados por prioridad desde la BD
+     * Ordena la lista de pacientes dada por prioridad de forma ascendente
+     * utilizando el algoritmo de {@code MergeSort}.
+     * @return Una nueva lista simple de pacientes ordenada por prioridad.
      */
-    public CustomMap<String, Object> getAllOrdenadosPorPrioridad() {
+    public CustomMap<String, Object> getAllPrioridadAsc() {
 
         CustomMap<String, Object> mapResponse = new CustomMap<>();
-        ListaSimple<Paciente> listaJPA = pacienteRepository.findAllByOrderByPrioridadAsc();
         ListaSimple<Paciente> listaSimple = new ListaSimple<>();
 
-        listaSimple.addAll(listaJPA);
+        listaSimple.addAll(pacienteRepository.findAll()); // Se obtiene la lista de todos los pacientes desde JPA
 
-        mapResponse.put("listPacientes", listaSimple);
-        mapResponse.put("total", listaSimple.size());
+        ListaSimple<Paciente> listaPrioridad = MergeSort.sortByPrioridadAsc(listaSimple); // Se ordena la lista por prioridad ascendente
+
+        // Verificar si la lista está vacía
+        if (listaPrioridad.isEmpty()) {
+
+            mapResponse.put("message", "No se encontraron pacientes");
+            mapResponse.put("listPacientes", null);
+            mapResponse.put("code", 404);
+
+        } else {
+
+            mapResponse.put("message", "Pacientes ordenados por prioridad");
+            mapResponse.put("listPacientes", listaPrioridad);
+            mapResponse.put("code", 200);
+        }
 
         return mapResponse;
     }
