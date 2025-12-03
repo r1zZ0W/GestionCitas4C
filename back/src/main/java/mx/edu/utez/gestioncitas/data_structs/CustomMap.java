@@ -99,7 +99,7 @@ public class CustomMap<K, V> extends AbstractMap<K, V> {
                     Objects.equals(value, e.getValue());
         }
 
-        /**
+        /**|
          * Calcula el hash code del nodo
          * @return Hash code del nodo
          */

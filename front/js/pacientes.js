@@ -13,6 +13,7 @@ const inpCorreoElectronico = document.getElementById('inpCorreoElectronico');
 const tbodyPacientes = document.getElementById('tbodyPacientes');
 const btnEnviar = document.getElementById('btnEnviarPaciente');
 const btnListar = document.getElementById('btnListarPacientes');
+const inpPrioridad = document.getElementById('inpPrioridad');
 
 document.getElementById('formPaciente').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -26,7 +27,8 @@ document.getElementById('formPaciente').addEventListener('submit', async (e) => 
         numeroTelefono: inpNumeroTelefono.value,
         direccion: inpDireccion.value,
         correoElectronico: inpCorreoElectronico.value,
-        sexo: radioSexo ? radioSexo.value : null
+        sexo: radioSexo ? radioSexo.value : null,
+        prioridad: inpPrioridad.value
     };
 
     const URL = 'http://localhost:8080/api/paciente';

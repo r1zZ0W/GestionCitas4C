@@ -9,6 +9,8 @@ const tbodyCitas = document.getElementById('tbodyCitas');
 const btnEnviarCita = document.getElementById('btnEnviarCita');
 const btnListarCitas = document.getElementById('btnListarCitas');
 
+const btnAtenderPaciente = document.getElementById('btnAtenderPaciente');
+
 // Cargar pacientes y médicos al iniciar
 document.addEventListener('DOMContentLoaded', async () => {
     await cargarPacientes();
@@ -50,6 +52,18 @@ function llenarFormularioPrueba() {
     }, 500); // Esperar a que se carguen los selects
 }
 
+btnAtenderPaciente.addEventListener('click', async () => {
+
+    
+
+});
+
+async function atenderPaciente() {
+    
+
+
+}
+
 async function cargarPacientesPrioridad() {
 
     const URL = 'http://localhost:8080/api/paciente/prioridad/asc';
@@ -69,15 +83,25 @@ async function cargarPacientesPrioridad() {
 
     for (let i = 0; i < listaPacientes.length; i++) {
         const paciente = listaPacientes[i];
+        
+        let prioridad = '';
+        
+        if (paciente.prioridad === 1)
+            prioridad = 'Alta';
+        
+        if (paciente.prioridad === 2)
+            prioridad = 'Media';
+        
+        if(paciente.prioridad === 3)
+             prioridad = 'Baja';
+
         htmlTable += `
         <tr>
             <td>${i + 1}</td>
             <td>${paciente.nombre} ${paciente.apellido}</td>
-            <td>${paciente.prioridad}</td>
+            <td>${prioridad}</td>
             <td>
-                <button class="btn btn-sm btnAtenderCita me-1" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333; padding: 0.25rem 0.5rem;" data-id="${paciente.id}" title="Atender">
-                    Atender
-                </button>
+                En espera
             </td> 
         </tr>
         `;
