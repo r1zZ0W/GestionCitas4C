@@ -41,7 +41,7 @@ public class Cita {
     private String motivoConsulta;
 
     @Column(length = 1)
-    private Character estado; // 'P' = Programada, 'C' = Cancelada, 'F' = Finalizada, 'R' = Reagendada
+    private Character estado; // 'P' = Programada, 'C' = Cancelada, 'F' = Finalizada, 'R' = Reagendada, 'E' = En Atención
 
     //Constructor vacío
     public Cita() {}

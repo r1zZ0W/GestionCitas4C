@@ -4,11 +4,14 @@ import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
 import mx.edu.utez.gestioncitas.data_structs.MergeSort;
 import mx.edu.utez.gestioncitas.dtos.CreatePacienteDTO;
+import mx.edu.utez.gestioncitas.model.Cita;
 import mx.edu.utez.gestioncitas.model.Paciente;
+import mx.edu.utez.gestioncitas.repository.CitaRepository;
 import mx.edu.utez.gestioncitas.repository.PacienteRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 /**
@@ -23,10 +26,12 @@ public class PacienteService {
 
     // Repositorio de Paciente inyectado
     private final PacienteRepository pacienteRepository;
+    private final CitaRepository citaRepository;
 
     // Constructor para inyección de dependencias
-    public PacienteService(PacienteRepository pacienteRepository) {
+    public PacienteService(PacienteRepository pacienteRepository, CitaRepository citaRepository) {
         this.pacienteRepository = pacienteRepository;
+        this.citaRepository = citaRepository;
     }
 
     /**
@@ -284,18 +289,50 @@ public class PacienteService {
     /**
      * Ordena la lista de pacientes dada por prioridad de forma ascendente
      * utilizando el algoritmo de {@code MergeSort}.
-     * Filtra los pacientes que NO están en atención.
+     * Filtra los pacientes basándose en sus citas activas (no finalizadas ni canceladas).
+     * La prioridad se obtiene de las citas, no del paciente directamente.
      * @return Una nueva lista simple de pacientes ordenada por prioridad (solo disponibles).
      */
     public CustomMap<String, Object> getAllPrioridadAsc() {
 
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        // Obtener todos los pacientes y filtrar los que NO están en atención
+        // Obtener pacientes basándose en sus citas activas (P, E, R)
+        // Excluir pacientes con citas finalizadas (F) o canceladas (C) para hoy
         ListaSimple<Paciente> pacientesDisponibles = new ListaSimple<>();
-        for (Paciente p : pacienteRepository.findAll())
-            if (p.getEnAtencion() == null || !p.getEnAtencion())
-                pacientesDisponibles.add(p);
+        ListaSimple<Integer> pacientesIdsAgregados = new ListaSimple<>(); // Para evitar duplicados
+        LocalDate fechaHoy = java.time.LocalDate.now();
+        
+        // Obtener todas las citas activas (Programadas, En Atención, Reagendadas) para hoy
+        for (Cita cita : citaRepository.findAll()) {
+            if (cita.getPaciente() != null && 
+                cita.getFecha() != null &&
+                cita.getFecha().equals(fechaHoy) &&
+                (cita.getEstado() == 'P' || cita.getEstado() == 'E' || cita.getEstado() == 'R')) {
+                
+                Paciente paciente = cita.getPaciente();
+                Integer pacienteId = paciente.getId();
+                
+                // Verificar que no esté en atención (a menos que sea la cita actual en estado E)
+                if (paciente.getEnAtencion() != null && paciente.getEnAtencion() && cita.getEstado() != 'E') {
+                    continue;
+                }
+                
+                // Verificar que no haya sido agregado ya
+                boolean yaAgregado = false;
+                for (int i = 0; i < pacientesIdsAgregados.size(); i++) {
+                    if (pacientesIdsAgregados.get(i).equals(pacienteId)) {
+                        yaAgregado = true;
+                        break;
+                    }
+                }
+                
+                if (!yaAgregado) {
+                    pacientesDisponibles.add(paciente);
+                    pacientesIdsAgregados.add(pacienteId);
+                }
+            }
+        }
 
         // Ordenar por prioridad usando MergeSort
         ListaSimple<Paciente> listaPrioridad = MergeSort.sortByPrioridadAsc(pacientesDisponibles);
@@ -309,7 +346,7 @@ public class PacienteService {
 
         } else {
 
-            mapResponse.put("message", "Pacientes ordenados por prioridad (solo disponibles)");
+            mapResponse.put("message", "Pacientes ordenados por prioridad (basado en citas activas)");
             mapResponse.put("listPacientes", listaPrioridad);
             mapResponse.put("code", 200);
         }

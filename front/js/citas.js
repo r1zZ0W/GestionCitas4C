@@ -3,6 +3,7 @@ const inpHora = document.getElementById('inpHora');
 const selectPaciente = document.getElementById('selectPaciente');
 const selectMedico = document.getElementById('selectMedico');
 const inpMotivoConsulta = document.getElementById('inpMotivoConsulta');
+const selectPrioridad = document.getElementById('selectPrioridad');
 const selectEstado = document.getElementById('selectEstado');
 
 const tbodyCitas = document.getElementById('tbodyCitas');
@@ -17,6 +18,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     await cargarMedicos();
     await listarCitas();
     await cargarPacientesPrioridad();
+    
+    // Actualización automática cada 3 segundos
+    setInterval(async () => {
+        await listarCitas();
+        await cargarPacientesPrioridad();
+    }, 3000); // Actualiza cada 3 segundos
     
     // Función para llenar el formulario con valores de prueba (solo para desarrollo)
     llenarFormularioPrueba();
@@ -235,6 +242,11 @@ document.getElementById('formCita').addEventListener('submit', async (e) => {
     });
     const pacienteData = await responsePaciente.json();
     const paciente = pacienteData.paciente;
+    
+    // Asignar prioridad desde el formulario al paciente
+    if (selectPrioridad.value) {
+        paciente.prioridad = parseInt(selectPrioridad.value);
+    }
 
     // Obtener médico completo
     const responseMedico = await fetch(`http://localhost:8080/api/medico/${medicoId}`, {
@@ -270,7 +282,22 @@ document.getElementById('formCita').addEventListener('submit', async (e) => {
     if (response.ok) {
         alert('Cita registrada correctamente');
         document.getElementById('formCita').reset();
+        // Actualizar paciente con la prioridad asignada
+        if (selectPrioridad.value) {
+            await fetch(`http://localhost:8080/api/paciente/${pacienteId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: paciente.nombre,
+                    apellido: paciente.apellido,
+                    prioridad: parseInt(selectPrioridad.value)
+                })
+            });
+        }
         await listarCitas();
+        await cargarPacientesPrioridad();
     } else {
         const error = await response.json();
         alert('Error al registrar la cita: ' + (error.error || 'Error desconocido'));
@@ -305,12 +332,31 @@ async function listarCitas() {
         const estado = cita.estado || 'N/A';
         
         let estadoTexto = '';
+        let estadoClass = '';
         switch (estado) {
-            case 'P': estadoTexto = 'Programada'; break;
-            case 'C': estadoTexto = 'Cancelada'; break;
-            case 'F': estadoTexto = 'Finalizada'; break;
-            case 'R': estadoTexto = 'Reagendada'; break;
-            default: estadoTexto = estado;
+            case 'P': 
+                estadoTexto = 'Programada'; 
+                estadoClass = 'text-info';
+                break;
+            case 'C': 
+                estadoTexto = 'Cancelada'; 
+                estadoClass = 'text-danger';
+                break;
+            case 'F': 
+                estadoTexto = 'Finalizada'; 
+                estadoClass = 'text-success fw-bold';
+                break;
+            case 'R': 
+                estadoTexto = 'Reagendada'; 
+                estadoClass = 'text-warning';
+                break;
+            case 'E': 
+                estadoTexto = 'En Atención'; 
+                estadoClass = 'text-warning fw-bold';
+                break;
+            default: 
+                estadoTexto = estado; 
+                estadoClass = '';
         }
         const pacienteNombre = cita.paciente ? `${cita.paciente.nombre} ${cita.paciente.apellido}` : 'N/A';
         const medicoNombre = cita.medicoAsignado ? `${cita.medicoAsignado.nombre} ${cita.medicoAsignado.apellido}` : 'N/A';
@@ -323,7 +369,7 @@ async function listarCitas() {
             <td>${pacienteNombre}</td>
             <td>${medicoNombre}</td>
             <td>${motivoConsulta}</td>
-            <td>${estadoTexto}</td>
+            <td class="${estadoClass}">${estadoTexto}</td>
             <td class="text-center">
                 <button class="btn btn-sm btnEditarCita me-1" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333; padding: 0.25rem 0.5rem;" data-id="${cita.id}" title="Editar">
                     <i class="bi bi-pencil"></i>

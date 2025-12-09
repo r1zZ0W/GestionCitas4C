@@ -19,6 +19,7 @@ import mx.edu.utez.gestioncitas.repository.PacienteRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -180,13 +181,36 @@ public class CitaService {
             cita.setEstado('P'); // P = Programada
 
         Cita nuevaCita = mapCita(cita);
+        
+        // La prioridad se asigna al paciente cuando se crea la cita
+        // Esto permite que la prioridad esté asociada a la cita, no solo al paciente
+        if (nuevaCita.getPaciente() != null) {
+            Paciente paciente = nuevaCita.getPaciente();
+            // Si el paciente viene con prioridad desde el formulario, actualizarla
+            if (paciente.getPrioridad() != null) {
+                // Actualizar la prioridad del paciente en BD
+                Optional<Paciente> optPaciente = pacienteRepository.findById(paciente.getId());
+                if (optPaciente.isPresent()) {
+                    Paciente pacienteBD = optPaciente.get();
+                    pacienteBD.setPrioridad(paciente.getPrioridad());
+                    pacienteRepository.save(pacienteBD);
+                    // Actualizar referencia en la cita
+                    nuevaCita.setPaciente(pacienteBD);
+                }
+            }
+        }
+        
         citaRepository.save(nuevaCita);
 
-        if (nuevaCita.getEstado() == 'A' || nuevaCita.getEstado() == 'P')
+        // Agregar a la cola si está Programada, Reagendada, o en estado A
+        // Las citas reagendadas vuelven a la cola para ser atendidas
+        if (nuevaCita.getEstado() == 'P' || nuevaCita.getEstado() == 'R') {
             colaCitasPendientes.offer(nuevaCita);
-
-
-        mapResponse.put("message", "Cita creada y agregada a la cola de pendientes");
+            mapResponse.put("message", "Cita creada y agregada a la cola de pendientes");
+        } else {
+            mapResponse.put("message", "Cita creada exitosamente");
+        }
+        
         mapResponse.put("cita", nuevaCita);
         mapResponse.put("code", 201);
 
@@ -215,8 +239,11 @@ public class CitaService {
         }
 
         Cita citaExistente = getExistente(cita, optCita);
+        Character estadoAnterior = optCita.get().getEstado();
+        Character estadoNuevo = citaExistente.getEstado();
 
-        if (citaExistente.getEstado() == 'F' || citaExistente.getEstado() == 'C') {
+        // Si se finaliza o cancela, liberar recursos
+        if (estadoNuevo == 'F' || estadoNuevo == 'C') {
             if (citaExistente.getMedicoAsignado() != null) {
                 citaExistente.getMedicoAsignado().setOcupado(false);
                 medicoRepository.save(citaExistente.getMedicoAsignado());
@@ -229,7 +256,18 @@ public class CitaService {
 
         citaRepository.save(citaExistente);
 
-        mapResponse.put("message", "Cita actualizada exitosamente");
+        // Si se reagenda (R), agregar a la cola usando estructura manual (Cola)
+        if (estadoNuevo == 'R' && estadoAnterior != 'R') {
+            colaCitasPendientes.offer(citaExistente);
+            mapResponse.put("message", "Cita reagendada y agregada a la cola de pendientes");
+        } else if (estadoNuevo == 'P' && estadoAnterior != 'P') {
+            // Si cambia a Programada, también agregar a la cola
+            colaCitasPendientes.offer(citaExistente);
+            mapResponse.put("message", "Cita actualizada y agregada a la cola de pendientes");
+        } else {
+            mapResponse.put("message", "Cita actualizada exitosamente");
+        }
+        
         mapResponse.put("cita", citaExistente);
         mapResponse.put("code", 200);
 
@@ -402,37 +440,14 @@ public class CitaService {
     }
 
     /**
-     * Atiende un paciente por prioridad: lo marca como "en atención" y después de un tiempo
-     * (30 segundos o tiempo aleatorio menor a 1 minuto) lo quita de la lista.
+     * Atiende un paciente por prioridad desde las citas programadas en la cola.
+     * Lo marca como "en atención" y después de 6 segundos lo quita de la lista y finaliza la cita.
      * @return mapa con la cita creada o error si no hay pacientes disponibles
      */
     public CustomMap<String, Object> atenderPacientePorPrioridad() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        // Obtener pacientes ordenados por prioridad (ascendente: 1=Alta, 2=Media, 3=Baja)
-        ListaSimple<Paciente> pacientes = new ListaSimple<>();
-        pacientes.addAll(pacienteRepository.findAll());
-        
-        // Filtrar pacientes que no estén en atención
-        ListaSimple<Paciente> pacientesDisponibles = new ListaSimple<>();
-        for (Paciente p : pacientes) {
-            if (p.getEnAtencion() == null || !p.getEnAtencion()) {
-                pacientesDisponibles.add(p);
-            }
-        }
-
-        if (pacientesDisponibles.isEmpty()) {
-            mapResponse.put("error", "No hay pacientes disponibles para atender");
-            mapResponse.put("code", 404);
-            return mapResponse;
-        }
-
-        // Ordenar por prioridad usando MergeSort (menor número = mayor prioridad)
-        ListaSimple<Paciente> pacientesOrdenados = MergeSort.sortByPrioridadAsc(pacientesDisponibles);
-
-        Paciente pacienteAAtender = pacientesOrdenados.get(0);
-
-        // Obtener un médico disponible
+        // Verificar que hay médicos disponibles
         ListaSimple<Medico> medicosDisponibles = new ListaSimple<>();
         for (Medico medico : medicoRepository.findAll()) {
             if (medico.getOcupado() == null || !medico.getOcupado()) {
@@ -446,7 +461,76 @@ public class CitaService {
             return mapResponse;
         }
 
-        Medico medicoAsignado = medicosDisponibles.get(0);
+        // Obtener citas programadas (P) o reagendadas (R) de la cola para hoy
+        LocalDate fechaHoy = java.time.LocalDate.now();
+        ListaSimple<Cita> citasDisponibles = new ListaSimple<>();
+        
+        // Obtener todas las citas programadas o reagendadas para hoy
+        for (Cita cita : citaRepository.findAll()) {
+            if (cita.getFecha() != null && 
+                cita.getFecha().equals(fechaHoy) &&
+                (cita.getEstado() == 'P' || cita.getEstado() == 'R') &&
+                cita.getPaciente() != null) {
+                
+                // Verificar que el paciente no esté en atención
+                Paciente paciente = cita.getPaciente();
+                if (paciente.getEnAtencion() == null || !paciente.getEnAtencion()) {
+                    citasDisponibles.add(cita);
+                }
+            }
+        }
+
+        if (citasDisponibles.isEmpty()) {
+            mapResponse.put("error", "No hay citas programadas disponibles para atender");
+            mapResponse.put("code", 404);
+            return mapResponse;
+        }
+
+        // Obtener pacientes de las citas disponibles
+        ListaSimple<Paciente> pacientesDeCitas = new ListaSimple<>();
+        CustomMap<Integer, Cita> citasPorPaciente = new CustomMap<>(); // Para asociar cita con paciente
+        
+        for (Cita cita : citasDisponibles) {
+            Paciente paciente = cita.getPaciente();
+            pacientesDeCitas.add(paciente);
+            citasPorPaciente.put(paciente.getId(), cita);
+        }
+
+        // Ordenar pacientes por prioridad usando MergeSort (menor número = mayor prioridad)
+        ListaSimple<Paciente> pacientesOrdenados = MergeSort.sortByPrioridadAsc(pacientesDeCitas);
+
+        if (pacientesOrdenados.isEmpty()) {
+            mapResponse.put("error", "No hay pacientes disponibles para atender");
+            mapResponse.put("code", 404);
+            return mapResponse;
+        }
+
+        Paciente pacienteAAtender = pacientesOrdenados.get(0);
+        Cita citaAAtender = citasPorPaciente.get(pacienteAAtender.getId());
+        
+        if (citaAAtender == null) {
+            mapResponse.put("error", "No se encontró la cita asociada al paciente");
+            mapResponse.put("code", 404);
+            return mapResponse;
+        }
+        
+        // Verificar que el paciente existe
+        Optional<Paciente> optPaciente = pacienteRepository.findById(pacienteAAtender.getId());
+        if (optPaciente.isEmpty()) {
+            mapResponse.put("error", "El paciente seleccionado no existe en la base de datos");
+            mapResponse.put("code", 404);
+            return mapResponse;
+        }
+        
+        pacienteAAtender = optPaciente.get();
+
+        // Obtener médico de la cita o asignar uno disponible
+        Medico medicoAsignado = citaAAtender.getMedicoAsignado();
+        if (medicoAsignado == null || (medicoAsignado.getOcupado() != null && medicoAsignado.getOcupado())) {
+            // Si el médico de la cita está ocupado o no tiene médico, asignar uno disponible
+            medicoAsignado = medicosDisponibles.get(0);
+        }
+        
         medicoAsignado.setOcupado(true);
         medicoRepository.save(medicoAsignado);
 
@@ -454,19 +538,23 @@ public class CitaService {
         pacienteAAtender.setEnAtencion(true);
         pacienteRepository.save(pacienteAAtender);
 
-        // Crear cita con estado 'E' (En Atención)
-        Cita nuevaCita = new Cita();
-        nuevaCita.setFecha(java.time.LocalDate.now());
-        nuevaCita.setHora(java.time.LocalTime.now());
-        nuevaCita.setPaciente(pacienteAAtender);
-        nuevaCita.setMedicoAsignado(medicoAsignado);
-        nuevaCita.setEstado('E'); // E = En Atención
-        nuevaCita.setMotivoConsulta("Atención por prioridad: " + 
-            (pacienteAAtender.getPrioridad() == 1 ? "Alta" : 
-             pacienteAAtender.getPrioridad() == 2 ? "Media" : "Baja"));
+        // Actualizar la cita existente a estado 'E' (En Atención)
+        citaAAtender.setEstado('E'); // E = En Atención
+        citaAAtender.setMedicoAsignado(medicoAsignado);
+        if (citaAAtender.getMotivoConsulta() == null || citaAAtender.getMotivoConsulta().isEmpty()) {
+            citaAAtender.setMotivoConsulta("Atención por prioridad: " + 
+                (pacienteAAtender.getPrioridad() == 1 ? "Alta" : 
+                 pacienteAAtender.getPrioridad() == 2 ? "Media" : "Baja"));
+        }
 
-        // Guardar cita en BD
-        citaRepository.save(nuevaCita);
+        // Guardar cita actualizada en BD
+        citaRepository.save(citaAAtender);
+
+        // Crear variables finales para usar en el lambda
+        final Integer pacienteId = pacienteAAtender.getId();
+        final Integer citaId = citaAAtender.getId();
+        final LocalDate fechaHoyFinal = fechaHoy;
+        final Integer medicoId = medicoAsignado.getId();
 
         // Tiempo de espera fijo de 6 segundos
         int tiempoEspera = 6; // 6 segundos
@@ -475,49 +563,79 @@ public class CitaService {
         ScheduledFuture<?> tareaFutura = scheduler.schedule(() -> {
             try {
                 // Obtener el paciente actualizado de la BD
-                Optional<Paciente> optPaciente = pacienteRepository.findById(pacienteAAtender.getId());
-                if (optPaciente.isPresent()) {
-                    Paciente paciente = optPaciente.get();
+                Optional<Paciente> optPacienteTimeout = pacienteRepository.findById(pacienteId);
+                if (optPacienteTimeout.isEmpty()) {
+                    tareasProgramadas.remove(citaId);
+                    return;
+                }
+                
+                Paciente paciente = optPacienteTimeout.get();
 
-                    // Verificar que la cita todavía existe y está en estado 'E'
-                    Optional<Cita> optCita = citaRepository.findById(nuevaCita.getId());
-                    if (optCita.isEmpty() || optCita.get().getEstado() != 'E') {
-                        // La cita fue eliminada o ya finalizada, no hacer nada
-                        tareasProgramadas.remove(nuevaCita.getId());
-                        return;
-                    }
+                // Verificar que la cita todavía existe y está en estado 'E'
+                Optional<Cita> optCita = citaRepository.findById(citaId);
+                if (optCita.isEmpty() || optCita.get().getEstado() != 'E') {
+                    // La cita fue eliminada o ya finalizada, no hacer nada
+                    tareasProgramadas.remove(citaId);
+                    return;
+                }
 
-                    // Quitar de la lista (marcar como no en atención)
-                    paciente.setEnAtencion(false);
+                Cita cita = optCita.get();
+                
+                // Finalizar la cita
+                cita.setEstado('F'); // F = Finalizada
+                citaRepository.save(cita);
 
-                    Cita cita = optCita.get();
-                    cita.setEstado('F'); // F = Finalizada
-
-                    // Liberar al médico
-                    if (cita.getMedicoAsignado() != null) {
-                        Medico medico = cita.getMedicoAsignado();
+                // Liberar al médico
+                if (cita.getMedicoAsignado() != null) {
+                    Optional<Medico> optMedico = medicoRepository.findById(medicoId);
+                    if (optMedico.isPresent()) {
+                        Medico medico = optMedico.get();
                         medico.setOcupado(false);
                         medicoRepository.save(medico);
                     }
-
-                    citaRepository.save(cita);
-                    pacienteRepository.save(paciente);
-
-                    // Agregar al historial
-                    pilaHistorialCitas.push(cita);
-                    arbolBusquedaHistorial.insert(cita);
-
-                    // Remover tarea del mapa
-                    tareasProgramadas.remove(nuevaCita.getId());
                 }
+
+                // Verificar si el paciente tiene otras citas activas antes de marcarlo como disponible
+                boolean tieneOtrasCitasActivas = false;
+                for (Cita otraCita : citaRepository.findAll()) {
+                    if (otraCita.getPaciente() != null && 
+                        otraCita.getPaciente().getId().equals(pacienteId) &&
+                        !otraCita.getId().equals(citaId)) {
+                        Character estado = otraCita.getEstado();
+                        LocalDate fechaCita = otraCita.getFecha();
+                        // Verificar si tiene otra cita activa (P o E) para hoy
+                        if ((estado == 'P' || estado == 'E') && 
+                            fechaCita != null && fechaCita.equals(fechaHoyFinal)) {
+                            tieneOtrasCitasActivas = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Solo marcar como no en atención si no tiene otras citas activas
+                if (!tieneOtrasCitasActivas) {
+                    paciente.setEnAtencion(false);
+                    pacienteRepository.save(paciente);
+                }
+
+                // Agregar al historial
+                pilaHistorialCitas.push(cita);
+                arbolBusquedaHistorial.insert(cita);
+
+                // Remover tarea del mapa
+                tareasProgramadas.remove(citaId);
             } catch (Exception e) {
                 System.err.println("Error al procesar timeout de atención: " + e.getMessage());
-                tareasProgramadas.remove(nuevaCita.getId());
+                e.printStackTrace();
+                tareasProgramadas.remove(citaId);
             }
         }, tiempoEspera, TimeUnit.SECONDS);
+        
+        // Guardar la tarea programada
+        tareasProgramadas.put(citaAAtender.getId(), tareaFutura);
 
         mapResponse.put("message", "Paciente en atención. Será removido automáticamente en " + tiempoEspera + " segundos.");
-        mapResponse.put("cita", nuevaCita);
+        mapResponse.put("cita", citaAAtender);
         mapResponse.put("paciente", pacienteAAtender);
         mapResponse.put("tiempoEspera", tiempoEspera);
         mapResponse.put("code", 200);
