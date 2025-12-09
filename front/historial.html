@@ -41,30 +41,43 @@
                 </div>
             </div>
         </nav>
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Lista de Historial</h5>
-                    <button type="button" class="btn btn-primary btn-sm" id="btnListarHistorial">
-                        Actualizar Lista
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table id="tblHistorial" class="table table-striped table-hover table-bordered">
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Fecha de Atencion</th>
-                                <th>Paciente Atendido</th>
-                                <th>Medico Atendido</th>
-                                <th>Prioridad</th>
-                                <th>Motivo de la Consulta</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyHistorial">
-                            <!-- datos datosos aquí -->
-                        </tbody>
-                    </table>
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Lista de Historial</h5>
+                        <div class="d-flex gap-2">
+                            <div class="input-group" style="width: 300px;">
+                                <input type="text" class="form-control form-control-sm" id="inpBuscarPaciente" placeholder="Buscar por nombre de paciente...">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="btnBuscar">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="btnLimpiarBusqueda">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" id="btnListarHistorial">
+                                Actualizar Lista
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="tblHistorial" class="table table-striped table-hover table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Fecha de Atencion</th>
+                                    <th>Paciente Atendido</th>
+                                    <th>Medico Atendido</th>
+                                    <th>Prioridad</th>
+                                    <th>Motivo de la Consulta</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyHistorial">
+                                <!-- datos datosos aquí -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

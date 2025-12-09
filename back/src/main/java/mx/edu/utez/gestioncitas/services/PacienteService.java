@@ -284,27 +284,35 @@ public class PacienteService {
     /**
      * Ordena la lista de pacientes dada por prioridad de forma ascendente
      * utilizando el algoritmo de {@code MergeSort}.
-     * @return Una nueva lista simple de pacientes ordenada por prioridad.
+     * Filtra los pacientes que NO están en atención.
+     * @return Una nueva lista simple de pacientes ordenada por prioridad (solo disponibles).
      */
     public CustomMap<String, Object> getAllPrioridadAsc() {
 
         CustomMap<String, Object> mapResponse = new CustomMap<>();
         ListaSimple<Paciente> listaSimple = new ListaSimple<>();
 
-        listaSimple.addAll(pacienteRepository.findAll()); // Se obtiene la lista de todos los pacientes desde JPA
+        // Obtener todos los pacientes y filtrar los que NO están en atención
+        ListaSimple<Paciente> pacientesDisponibles = new ListaSimple<>();
+        for (Paciente p : pacienteRepository.findAll()) {
+            if (p.getEnAtencion() == null || !p.getEnAtencion()) {
+                pacientesDisponibles.add(p);
+            }
+        }
 
-        ListaSimple<Paciente> listaPrioridad = MergeSort.sortByPrioridadAsc(listaSimple); // Se ordena la lista por prioridad ascendente
+        // Ordenar por prioridad usando MergeSort
+        ListaSimple<Paciente> listaPrioridad = MergeSort.sortByPrioridadAsc(pacientesDisponibles);
 
         // Verificar si la lista está vacía
         if (listaPrioridad.isEmpty()) {
 
-            mapResponse.put("message", "No se encontraron pacientes");
-            mapResponse.put("listPacientes", null);
-            mapResponse.put("code", 404);
+            mapResponse.put("message", "No se encontraron pacientes disponibles");
+            mapResponse.put("listPacientes", listaPrioridad);
+            mapResponse.put("code", 200);
 
         } else {
 
-            mapResponse.put("message", "Pacientes ordenados por prioridad");
+            mapResponse.put("message", "Pacientes ordenados por prioridad (solo disponibles)");
             mapResponse.put("listPacientes", listaPrioridad);
             mapResponse.put("code", 200);
         }

@@ -1,39 +1,70 @@
 package mx.edu.utez.gestioncitas.services;
 
+import mx.edu.utez.gestioncitas.data_structs.BinaryTree;
 import mx.edu.utez.gestioncitas.data_structs.Cola;
 import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
+import mx.edu.utez.gestioncitas.data_structs.MergeSort;
 import mx.edu.utez.gestioncitas.data_structs.Pila;
 
 import mx.edu.utez.gestioncitas.dtos.CreateCitaDTO;
 
 import mx.edu.utez.gestioncitas.model.Cita;
+import mx.edu.utez.gestioncitas.model.Medico;
+import mx.edu.utez.gestioncitas.model.Paciente;
 
 import mx.edu.utez.gestioncitas.repository.CitaRepository;
-
+import mx.edu.utez.gestioncitas.repository.MedicoRepository;
+import mx.edu.utez.gestioncitas.repository.PacienteRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class CitaService {
 
     /**
      * Repositorio JPA para operaciones CRUD en la entidad Cita al igual que la gestión de
-     * la cola de citas pendientes y el historial de citas atendidas utilizando una pila.
+     * la cola de citas pendientes y el historial de citas atendidas utilizando una Pila.
+     * BinaryTree se usa para búsqueda eficiente en el historial.
      */
     private final CitaRepository citaRepository;
+    private final PacienteRepository pacienteRepository;
+    private final MedicoRepository medicoRepository;
     private final Cola<Cita> colaCitasPendientes = new Cola<>();
     private final Pila<Cita> pilaHistorialCitas = new Pila<>();
+    private final BinaryTree<Cita> arbolBusquedaHistorial; // Para búsqueda eficiente
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+    private final Random random = new Random();
 
     /**
-     *Constructor para inyección de dependencias y carga inicial de citas pendientes
+     * Constructor para inyección de dependencias y carga inicial de citas pendientes
      * @param citaRepository Repositorio JPA para la entidad Cita
+     * @param pacienteRepository Repositorio JPA para la entidad Paciente
+     * @param medicoRepository Repositorio JPA para la entidad Medico
      */
-    public CitaService(CitaRepository citaRepository) {
+    public CitaService(CitaRepository citaRepository, PacienteRepository pacienteRepository, MedicoRepository medicoRepository) {
         this.citaRepository = citaRepository;
+        this.pacienteRepository = pacienteRepository;
+        this.medicoRepository = medicoRepository;
+        
+        // Crear BinaryTree para búsqueda por ID (más eficiente)
+        this.arbolBusquedaHistorial = new BinaryTree<>((c1, c2) -> {
+            Integer id1 = c1.getId() != null ? c1.getId() : 0;
+            Integer id2 = c2.getId() != null ? c2.getId() : 0;
+            return id1.compareTo(id2);
+        });
+        
         cargarCitasPendientes();
+        cargarHistorialCitas();
     }
 
     /**
@@ -45,6 +76,18 @@ public class CitaService {
             if (cita.getEstado() == 'A' || cita.getEstado() == 'P')
                 colaCitasPendientes.offer(cita);
 
+    }
+
+    /**
+     * Carga el historial de citas finalizadas desde la BD a la pila y al árbol de búsqueda al iniciar el servicio
+     */
+    private void cargarHistorialCitas() {
+        for (Cita cita : citaRepository.findAll()) {
+            if (cita.getEstado() != null && cita.getEstado() == 'F') { // F = Finalizada
+                pilaHistorialCitas.push(cita);
+                arbolBusquedaHistorial.insert(cita); // Para búsqueda eficiente
+            }
+        }
     }
 
     /**
@@ -309,12 +352,130 @@ public class CitaService {
         // Actualizar en BD
         citaRepository.save(citaAtendida);
 
-        // Agregar al historial
+        // Agregar al historial (Pila) y al árbol de búsqueda
         pilaHistorialCitas.push(citaAtendida);
+        arbolBusquedaHistorial.insert(citaAtendida);
 
         mapResponse.put("message", "Cita atendida exitosamente. Movida de la cola al historial.");
         mapResponse.put("citaAtendida", citaAtendida);
         mapResponse.put("citasPendientesRestantes", colaCitasPendientes.size());
+
+        return mapResponse;
+    }
+
+    /**
+     * Atiende un paciente por prioridad: lo marca como "en atención" y después de un tiempo
+     * (30 segundos o tiempo aleatorio menor a 1 minuto) lo quita de la lista.
+     * @return mapa con la cita creada o error si no hay pacientes disponibles
+     */
+    public CustomMap<String, Object> atenderPacientePorPrioridad() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        // Obtener pacientes ordenados por prioridad (ascendente: 1=Alta, 2=Media, 3=Baja)
+        ListaSimple<Paciente> pacientes = new ListaSimple<>();
+        pacientes.addAll(pacienteRepository.findAll());
+        
+        // Filtrar pacientes que no estén en atención
+        ListaSimple<Paciente> pacientesDisponibles = new ListaSimple<>();
+        for (Paciente p : pacientes) {
+            if (p.getEnAtencion() == null || !p.getEnAtencion()) {
+                pacientesDisponibles.add(p);
+            }
+        }
+
+        if (pacientesDisponibles.isEmpty()) {
+            mapResponse.put("error", "No hay pacientes disponibles para atender");
+            mapResponse.put("code", 404);
+            return mapResponse;
+        }
+
+        // Ordenar por prioridad usando MergeSort (menor número = mayor prioridad)
+        ListaSimple<Paciente> pacientesOrdenados = MergeSort.sortByPrioridadAsc(pacientesDisponibles);
+
+        Paciente pacienteAAtender = pacientesOrdenados.get(0);
+
+        // Obtener un médico disponible
+        ListaSimple<Medico> medicosDisponibles = new ListaSimple<>();
+        for (Medico medico : medicoRepository.findAll()) {
+            if (medico.getOcupado() == null || !medico.getOcupado()) {
+                medicosDisponibles.add(medico);
+            }
+        }
+
+        if (medicosDisponibles.isEmpty()) {
+            mapResponse.put("error", "No hay médicos disponibles para atender");
+            mapResponse.put("code", 404);
+            return mapResponse;
+        }
+
+        Medico medicoAsignado = medicosDisponibles.get(0);
+        medicoAsignado.setOcupado(true);
+        medicoRepository.save(medicoAsignado);
+
+        // Marcar paciente como en atención
+        pacienteAAtender.setEnAtencion(true);
+        pacienteRepository.save(pacienteAAtender);
+
+        // Crear cita con estado 'E' (En Atención)
+        Cita nuevaCita = new Cita();
+        nuevaCita.setFecha(java.time.LocalDate.now());
+        nuevaCita.setHora(java.time.LocalTime.now());
+        nuevaCita.setPaciente(pacienteAAtender);
+        nuevaCita.setMedicoAsignado(medicoAsignado);
+        nuevaCita.setEstado('E'); // E = En Atención
+        nuevaCita.setMotivoConsulta("Atención por prioridad: " + 
+            (pacienteAAtender.getPrioridad() == 1 ? "Alta" : 
+             pacienteAAtender.getPrioridad() == 2 ? "Media" : "Baja"));
+
+        // Guardar cita en BD
+        citaRepository.save(nuevaCita);
+
+        // Tiempo de espera fijo de 6 segundos
+        int tiempoEspera = 6; // 6 segundos
+
+        // Programar tarea para quitar al paciente de la lista después del timeout
+        scheduler.schedule(() -> {
+            try {
+                // Obtener el paciente actualizado de la BD
+                Optional<Paciente> optPaciente = pacienteRepository.findById(pacienteAAtender.getId());
+                if (optPaciente.isPresent()) {
+                    Paciente paciente = optPaciente.get();
+                    
+                    // Quitar de la lista (marcar como no en atención)
+                    paciente.setEnAtencion(false);
+                    
+                    // Finalizar la cita
+                    Optional<Cita> optCita = citaRepository.findById(nuevaCita.getId());
+                    if (optCita.isPresent()) {
+                        Cita cita = optCita.get();
+                        cita.setEstado('F'); // F = Finalizada
+                        
+                        // Liberar al médico
+                        if (cita.getMedicoAsignado() != null) {
+                            Medico medico = cita.getMedicoAsignado();
+                            medico.setOcupado(false);
+                            medicoRepository.save(medico);
+                        }
+                        
+                        citaRepository.save(cita);
+                        
+                        // Agregar al historial (Pila) y al árbol de búsqueda
+                        pilaHistorialCitas.push(cita);
+                        arbolBusquedaHistorial.insert(cita);
+                    }
+                    
+                    pacienteRepository.save(paciente);
+                }
+            } catch (Exception e) {
+                System.err.println("Error al procesar timeout de atención: " + e.getMessage());
+            }
+        }, tiempoEspera, TimeUnit.SECONDS);
+
+        mapResponse.put("message", "Paciente en atención. Será removido automáticamente en " + tiempoEspera + " segundos.");
+        mapResponse.put("cita", nuevaCita);
+        mapResponse.put("paciente", pacienteAAtender);
+        mapResponse.put("tiempoEspera", tiempoEspera);
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }
@@ -355,25 +516,47 @@ public class CitaService {
     }
 
     /**
-     * Obtiene el historial de citas procesadas (LIFO)
+     * Obtiene el historial de citas procesadas (LIFO - Pila)
      * @return mapa con la lista de citas en el historial
      */
     public CustomMap<String, Object> getHistorialCitas() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        ListaSimple<Cita> listaHistorial = new ListaSimple<>();
-        listaHistorial.addAll(pilaHistorialCitas.toList());
+        // Sincronizar la pila con la BD (por si hay citas finalizadas que no están en la pila)
+        sincronizarHistorialConBD();
+
+        // Obtener lista de la pila (LIFO - última en entrar, primera en salir)
+        ListaSimple<Cita> listaHistorial = pilaHistorialCitas.toList();
 
         mapResponse.put("historialCitas", listaHistorial);
         mapResponse.put("tamaño", pilaHistorialCitas.size());
         mapResponse.put("isEmpty", pilaHistorialCitas.isEmpty());
-        mapResponse.put("message", "Historial ordenado LIFO: la última cita procesada aparece primero");
+        mapResponse.put("message", "Historial ordenado LIFO (Pila): la última cita procesada aparece primero");
 
         return mapResponse;
     }
 
     /**
-     * Obtiene la última cita procesada sin sacarla del historial
+     * Sincroniza la pila y el árbol de búsqueda con las citas finalizadas de la BD
+     */
+    private void sincronizarHistorialConBD() {
+        // Limpiar y reconstruir desde la BD para asegurar que esté sincronizado
+        pilaHistorialCitas.clear();
+        arbolBusquedaHistorial.clear();
+        
+        // Obtener todas las citas finalizadas de la BD y agregarlas
+        for (Cita cita : citaRepository.findAll()) {
+            if (cita.getEstado() != null && cita.getEstado() == 'F') { // F = Finalizada
+                pilaHistorialCitas.push(cita);
+                arbolBusquedaHistorial.insert(cita);
+            }
+        }
+        
+        System.out.println("Historial sincronizado: " + pilaHistorialCitas.size() + " citas finalizadas");
+    }
+
+    /**
+     * Obtiene la última cita procesada (la más reciente - LIFO)
      * @return mapa con la última cita procesada o error si el historial está vacío
      */
     public CustomMap<String, Object> getUltimaCitaProcesada() {
@@ -392,28 +575,75 @@ public class CitaService {
     }
 
     /**
-     * Revierte la última cita procesada (la saca del historial y la vuelve a la cola)
-     * @return mapa con la cita revertida o error si el historial está vacío
+     * Busca una cita en el historial por ID usando BinaryTree (búsqueda eficiente)
+     * @param id ID de la cita a buscar
+     * @return mapa con la cita encontrada o error si no existe
      */
-    public CustomMap<String, Object> revertirUltimaCita() {
+    public CustomMap<String, Object> buscarCitaEnHistorial(Integer id) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        if (pilaHistorialCitas.isEmpty()) {
-            mapResponse.put("error", "No hay citas en el historial para revertir");
+        if (id == null) {
+            mapResponse.put("error", "El ID no puede ser nulo");
+            mapResponse.put("code", 400);
             return mapResponse;
         }
 
-        Cita citaRevertida = pilaHistorialCitas.pop();
-        citaRevertida.setEstado('P'); // P = Programada nuevamente
+        // Sincronizar primero
+        sincronizarHistorialConBD();
 
-        // Actualizar en BD
-        citaRepository.save(citaRevertida);
+        // Buscar en el árbol (más eficiente que recorrer la pila)
+        Cita citaEncontrada = arbolBusquedaHistorial.findById(id, Cita::getId);
 
-        // Volver a la cola
-        colaCitasPendientes.offer(citaRevertida);
+        if (citaEncontrada == null) {
+            mapResponse.put("error", "Cita no encontrada en el historial con ID: " + id);
+            mapResponse.put("code", 404);
+            return mapResponse;
+        }
 
-        mapResponse.put("citaRevertida", citaRevertida);
-        mapResponse.put("message", "Cita revertida exitosamente. Movida del historial a la cola de pendientes.");
+        mapResponse.put("cita", citaEncontrada);
+        mapResponse.put("message", "Cita encontrada en el historial");
+        mapResponse.put("code", 200);
+
+        return mapResponse;
+    }
+
+    /**
+     * Busca citas en el historial por nombre de paciente usando BinaryTree
+     * @param nombrePaciente Nombre o parte del nombre del paciente
+     * @return mapa con las citas encontradas
+     */
+    public CustomMap<String, Object> buscarCitasPorPaciente(String nombrePaciente) {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        if (nombrePaciente == null || nombrePaciente.trim().isEmpty()) {
+            mapResponse.put("error", "El nombre del paciente no puede estar vacío");
+            mapResponse.put("code", 400);
+            return mapResponse;
+        }
+
+        // Sincronizar primero
+        sincronizarHistorialConBD();
+
+        // Buscar en todas las citas del historial
+        ListaSimple<Cita> citasEncontradas = new ListaSimple<>();
+        String nombreBusqueda = nombrePaciente.toLowerCase().trim();
+
+        // Recorrer la pila y buscar por nombre
+        ListaSimple<Cita> todasLasCitas = pilaHistorialCitas.toList();
+        for (Cita cita : todasLasCitas) {
+            if (cita.getPaciente() != null) {
+                String nombreCompleto = (cita.getPaciente().getNombre() + " " + 
+                                         cita.getPaciente().getApellido()).toLowerCase();
+                if (nombreCompleto.contains(nombreBusqueda)) {
+                    citasEncontradas.add(cita);
+                }
+            }
+        }
+
+        mapResponse.put("citasEncontradas", citasEncontradas);
+        mapResponse.put("tamaño", citasEncontradas.size());
+        mapResponse.put("terminoBusqueda", nombrePaciente);
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }

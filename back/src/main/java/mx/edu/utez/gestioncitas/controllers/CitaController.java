@@ -184,15 +184,48 @@ public class CitaController {
     }
 
     /**
-     * Revierte la última cita procesada
-     * @return ResponseEntity con la respuesta de la operación y el estado HTTP
+     * Atiende un paciente por prioridad (lo marca como en atención y lo quita después de un tiempo)
+     * @return ResponseEntity con la cita creada y el estado HTTP
      */
-    @PostMapping("/pila/revertir")
-    public ResponseEntity<Object> revertirUltimaCita() {
-        CustomMap<String, Object> mapResponse = citaService.revertirUltimaCita();
+    @PostMapping("/atender/prioridad")
+    public ResponseEntity<Object> atenderPacientePorPrioridad() {
+        CustomMap<String, Object> mapResponse = citaService.atenderPacientePorPrioridad();
         
         if (mapResponse.containsKey("error")) {
             return new ResponseEntity<>(mapResponse, HttpStatus.NOT_FOUND);
+        }
+        
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
+    /**
+     * Busca una cita en el historial por ID usando BinaryTree
+     * @param id ID de la cita a buscar
+     * @return ResponseEntity con la cita encontrada y el estado HTTP
+     */
+    @GetMapping("/historial/buscar/{id}")
+    public ResponseEntity<Object> buscarCitaEnHistorial(@PathVariable Integer id) {
+        CustomMap<String, Object> mapResponse = citaService.buscarCitaEnHistorial(id);
+        
+        if (mapResponse.containsKey("error")) {
+            HttpStatus status = (Integer) mapResponse.get("code") == 404 ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return new ResponseEntity<>(mapResponse, status);
+        }
+        
+        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+    }
+
+    /**
+     * Busca citas en el historial por nombre de paciente
+     * @param nombre Nombre del paciente a buscar
+     * @return ResponseEntity con las citas encontradas y el estado HTTP
+     */
+    @GetMapping("/historial/buscar/paciente")
+    public ResponseEntity<Object> buscarCitasPorPaciente(@RequestParam String nombre) {
+        CustomMap<String, Object> mapResponse = citaService.buscarCitasPorPaciente(nombre);
+        
+        if (mapResponse.containsKey("error")) {
+            return new ResponseEntity<>(mapResponse, HttpStatus.BAD_REQUEST);
         }
         
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);

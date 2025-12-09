@@ -57,93 +57,29 @@ function llenarFormularioPrueba() {
 btnAtenderPaciente.addEventListener('click', async () => {
 
     try {
-        // 1. Obtener el primer paciente de prioridad
-        const responsePacientes = await fetch('http://localhost:8080/api/paciente/prioridad/asc', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const dataPacientes = await responsePacientes.json();
-        const listaPacientes = dataPacientes.listPacientes;
-        
-        if (!listaPacientes || listaPacientes.length === 0) {
-            alert('No hay pacientes en espera');
-            return;
-        }
-        
-        const pacienteAAtender = listaPacientes[0]; // Primer paciente (mayor prioridad)
-        
-        // 2. Obtener un médico DISPONIBLE
-        const responseMedicos = await fetch('http://localhost:8080/api/medico/disponibles', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const dataMedicos = await responseMedicos.json();
-        const listaMedicos = dataMedicos.listMedicos;
-        
-        if (!listaMedicos || listaMedicos.length === 0) {
-            alert('No hay médicos disponibles en este momento');
-            return;
-        }
-        
-        const medicoDisponible = listaMedicos[0]; // Primer médico disponible
-        
-        // Confirmar antes de atender
-        if (!confirm(`¿Atender a ${pacienteAAtender.nombre} ${pacienteAAtender.apellido} con Dr(a). ${medicoDisponible.nombre} ${medicoDisponible.apellido}?`)) {
-            return;
-        }
-        
-        // 3. Crear la cita automáticamente
-        const ahora = new Date();
-        const fecha = ahora.toISOString().split('T')[0];
-        const hora = ahora.toTimeString().slice(0, 5);
-        
-        let prioridadTexto = '';
-        if (pacienteAAtender.prioridad === 1) prioridadTexto = 'Alta';
-        else if (pacienteAAtender.prioridad === 2) prioridadTexto = 'Media';
-        else prioridadTexto = 'Baja';
-        
-        const nuevaCita = {
-            fecha: fecha,
-            hora: hora,
-            paciente: pacienteAAtender,
-            medicoAsignado: medicoDisponible,
-            motivoConsulta: `Atención por prioridad: ${prioridadTexto}`,
-            estado: 'P' // P = Programada
-        };
-        
-        // 4. Guardar la cita
-        const responseCita = await fetch('http://localhost:8080/api/cita', {
+        // Usar el endpoint que maneja todo: marca en atención, crea cita, y después de 30-60 seg la finaliza
+        const response = await fetch('http://localhost:8080/api/cita/atender/prioridad', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(nuevaCita)
-        });
-        
-        if (!responseCita.ok) {
-            const error = await responseCita.json();
-            alert('Error al crear la cita: ' + (error.error || 'Error desconocido'));
-            return;
-        }
-        
-        // 5. Marcar al médico como ocupado
-        await fetch(`http://localhost:8080/api/medico/${medicoDisponible.id}/ocupado`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
             }
         });
         
-        // 6. Mostrar mensaje de éxito
-        alert(`✅ Paciente ${pacienteAAtender.nombre} ${pacienteAAtender.apellido} está siendo atendido por Dr(a). ${medicoDisponible.nombre} ${medicoDisponible.apellido}`);
+        const data = await response.json();
         
-        // 7. Actualizar las listas
+        if (!response.ok || data.error) {
+            alert('Error: ' + (data.error || 'No se pudo atender al paciente'));
+            return;
+        }
+        
+        const cita = data.cita;
+        const paciente = data.paciente;
+        const tiempoEspera = data.tiempoEspera || 30;
+        
+        // Mostrar mensaje de éxito
+        alert(`✅ Paciente ${paciente.nombre} ${paciente.apellido} está en atención.\nSerá finalizado automáticamente en ${tiempoEspera} segundos y agregado al historial.`);
+        
+        // Actualizar las listas
         await cargarPacientesPrioridad();
         await listarCitas();
         
@@ -193,37 +129,49 @@ async function cargarPacientesPrioridad() {
         }
     });
 
-    console.log(response);
-
     const jsonResponse = await response.json();
-    const listaPacientes = jsonResponse.listPacientes;
+    const listaPacientes = jsonResponse.listPacientes || [];
 
     let htmlTable = '';
 
-    for (let i = 0; i < listaPacientes.length; i++) {
-        const paciente = listaPacientes[i];
-        
-        let prioridad = '';
-        
-        if (paciente.prioridad === 1)
-            prioridad = 'Alta';
-        
-        if (paciente.prioridad === 2)
-            prioridad = 'Media';
-        
-        if(paciente.prioridad === 3)
-             prioridad = 'Baja';
-
-        htmlTable += `
+    if (listaPacientes.length === 0) {
+        htmlTable = `
         <tr>
-            <td>${i + 1}</td>
-            <td>${paciente.nombre} ${paciente.apellido}</td>
-            <td>${prioridad}</td>
-            <td>
-                En espera
-            </td> 
+            <td colspan="4" class="text-center">No hay pacientes disponibles en espera</td>
         </tr>
         `;
+    } else {
+        for (let i = 0; i < listaPacientes.length; i++) {
+            const paciente = listaPacientes[i];
+            
+            let prioridad = '';
+            
+            if (paciente.prioridad === 1)
+                prioridad = 'Alta';
+            else if (paciente.prioridad === 2)
+                prioridad = 'Media';
+            else if (paciente.prioridad === 3)
+                prioridad = 'Baja';
+
+            // Verificar estado
+            let estado = 'En espera';
+            let estadoClass = 'text-info';
+            if (paciente.enAtencion) {
+                estado = 'En atención';
+                estadoClass = 'text-warning fw-bold';
+            }
+
+            htmlTable += `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${paciente.nombre} ${paciente.apellido}</td>
+                <td>${prioridad}</td>
+                <td class="${estadoClass}">
+                    ${estado}
+                </td> 
+            </tr>
+            `;
+        }
     }
 
     tbodyPrioridad.innerHTML = htmlTable;

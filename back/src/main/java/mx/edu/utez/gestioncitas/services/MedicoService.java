@@ -1,5 +1,6 @@
 package mx.edu.utez.gestioncitas.services;
 
+import mx.edu.utez.gestioncitas.data_structs.BubbleSort;
 import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.data_structs.ListaSimple;
 import mx.edu.utez.gestioncitas.dtos.CreateMedicoDTO;
@@ -33,6 +34,26 @@ public class MedicoService {
 
         mapResponse.put("message", "Lista de médicos obtenida exitosamente");
         mapResponse.put("listMedicos", listaMedicos);
+
+        return mapResponse;
+    }
+
+    /**
+     * Obtiene todos los médicos ordenados por nombre alfabéticamente usando BubbleSort
+     * @return Mapa con la lista de médicos ordenada por nombre
+     */
+    public CustomMap<String, Object> getAllOrdenadosPorNombre() {
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        ListaSimple<Medico> listaMedicos = new ListaSimple<>();
+        listaMedicos.addAll(medicoRepository.findAll());
+
+        // Ordenar usando BubbleSort
+        ListaSimple<Medico> medicosOrdenados = BubbleSort.sortByNombreAsc(listaMedicos);
+
+        mapResponse.put("message", "Lista de médicos ordenada por nombre (BubbleSort)");
+        mapResponse.put("listMedicos", medicosOrdenados);
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }

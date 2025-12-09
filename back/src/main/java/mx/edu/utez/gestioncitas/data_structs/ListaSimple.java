@@ -84,6 +84,26 @@ public class ListaSimple<T> extends AbstractList<T> {
     }
 
     /**
+     * Reemplaza el elemento en la posición idx con el nuevo elemento.
+     * @param idx índice del elemento a reemplazar
+     * @param element nuevo elemento
+     * @return el elemento anterior en esa posición
+     */
+    @Override
+    public T set(int idx, T element) {
+        checkIndex(idx);
+        
+        Nodo<T> current = head;
+        for (int i = 0; i < idx; i++)
+            current = current.getNext();
+        
+        T oldData = current.getData();
+        current.setData(element);
+        modCount++;
+        return oldData;
+    }
+
+    /**
      * Remueve el elemento en la posición idx.
      * @param idx índice del elemento a remover
      * @return el elemento removido

@@ -112,6 +112,7 @@ public class Cita {
             case 'C' -> "Cancelada";
             case 'F' -> "Finalizada";
             case 'R' -> "Reagendada";
+            case 'E' -> "En Atención";
             default -> "Desconocido";
         };
 
