@@ -8,6 +8,8 @@ import mx.edu.utez.gestioncitas.repository.MedicoRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class MedicoService {
 
@@ -20,6 +22,7 @@ public class MedicoService {
 
     /**
      * Obtiene todos los médicos desde la base de datos
+     * @return Mapa con la lista de médicos y el total de registros
      */
     public CustomMap<String, Object> getAll() {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -28,31 +31,45 @@ public class MedicoService {
 
         listaMedicos.addAll(medicoRepository.findAll());
 
+        mapResponse.put("message", "Lista de médicos obtenida exitosamente");
         mapResponse.put("listMedicos", listaMedicos);
-        mapResponse.put("total", listaMedicos.size());
 
         return mapResponse;
     }
 
     /**
      * Obtiene un médico por su ID
+     * @param id ID del médico a buscar
+     * @return Mapa con la respuesta de la búsqueda
      */
     public CustomMap<String, Object> getById(Integer id) {
+
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Medico medico = medicoRepository.findById(id).orElse(null);
+        Optional<Medico> optMedico = medicoRepository.findById(id);
 
-        if (medico == null) {
+        if (optMedico.isEmpty()) {
+
             mapResponse.put("error", "No se pudo encontrar el médico con ID: " + id);
+            mapResponse.put("code", 404);
+
             return mapResponse;
+
         }
 
+        Medico medico = optMedico.get();
+
         mapResponse.put("medico", medico);
+        mapResponse.put("code", 200);
+
         return mapResponse;
+
     }
 
     /**
      * Crea un nuevo médico en la base de datos
+     * @param medico DTO con los datos del médico a crear
+     * @return Mapa con la respuesta de la creación
      */
     public CustomMap<String, Object> create(CreateMedicoDTO medico) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -78,47 +95,40 @@ public class MedicoService {
             return mapResponse;
         }
 
-        // Se have el mapeo de DTO a entidad Médico para guardarlo en BD
+        // Se hace el mapeo de DTO a entidad Médico para guardarlo en BD
         Medico nuevoMedico = mapMedico(medico);
 
         // Guardar en BD el nuevo médico
         Medico medicoGuardado = medicoRepository.save(nuevoMedico);
 
-        mapResponse.put("medico", medicoGuardado);
         mapResponse.put("message", "Médico creado exitosamente");
-
+        mapResponse.put("medico", medicoGuardado);
+        mapResponse.put("code", 201);
         return mapResponse;
     }
 
     /**
      * Actualiza un médico existente
+     * @param id ID del médico a actualizar
+     * @param medico DTO con los datos actualizados del médico
+     * @return Mapa con la respuesta de la actualización
      */
     public CustomMap<String, Object> update(Integer id, CreateMedicoDTO medico) {
+
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Medico medicoExistente = medicoRepository.findById(id).orElse(null);
+        Optional<Medico> optMedico = medicoRepository.findById(id);
 
-        if (medicoExistente == null) {
-            mapResponse.put("error", "Médico no encontrado con ID: " + id);
+        if (optMedico.isEmpty()) {
+
+            mapResponse.put("error", "No se pudo encontrar el médico con ID: " + id);
+            mapResponse.put("code", 404);
+
             return mapResponse;
+
         }
 
-        // Actualizar campos solo si vienen con datos
-        if (medico.getNombre() != null && !medico.getNombre().trim().isEmpty()) {
-            medicoExistente.setNombre(medico.getNombre());
-        }
-
-        if (medico.getApellido() != null && !medico.getApellido().trim().isEmpty()) {
-            medicoExistente.setApellido(medico.getApellido());
-        }
-
-        if (medico.getEspecialidad() != null && !medico.getEspecialidad().trim().isEmpty()) {
-            medicoExistente.setEspecialidad(medico.getEspecialidad());
-        }
-
-        if (medico.getNumeroConsultorio() != null) {
-            medicoExistente.setNumeroConsultorio(medico.getNumeroConsultorio());
-        }
+        Medico medicoExistente = getMedicoExistente(medico, optMedico);
 
         // Guardar cambios en BD
         Medico medicoActualizado = medicoRepository.save(medicoExistente);
@@ -130,22 +140,60 @@ public class MedicoService {
     }
 
     /**
+     * Actualiza los campos de un médico existente con los datos proporcionados en el DTO
+     * @param medico DTO con los datos actualizados del médico
+     * @param optMedico Médico existente en la base de datos
+     * @return Médico con los datos actualizados
+     */
+    private static Medico getMedicoExistente(CreateMedicoDTO medico, Optional<Medico> optMedico) {
+        Medico medicoExistente = optMedico.get();
+
+        // Actualizar campos solo si vienen con datos
+        if (medico.getNombre() != null && !medico.getNombre().trim().isEmpty())
+            medicoExistente.setNombre(medico.getNombre());
+
+        if (medico.getApellido() != null && !medico.getApellido().trim().isEmpty())
+            medicoExistente.setApellido(medico.getApellido());
+
+        if (medico.getEspecialidad() != null && !medico.getEspecialidad().trim().isEmpty())
+            medicoExistente.setEspecialidad(medico.getEspecialidad());
+
+        if (medico.getNumeroConsultorio() != null)
+            medicoExistente.setNumeroConsultorio(medico.getNumeroConsultorio());
+
+        if (medico.getOcupado() != null)
+            medicoExistente.setOcupado(medico.getOcupado());
+
+        return medicoExistente;
+    }
+
+    /**
      * Elimina un médico por su ID
+     * @param id ID del médico a eliminar
+     * @return Mapa con la respuesta de la eliminación
      */
     public CustomMap<String, Object> delete(Integer id) {
+
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Medico medico = medicoRepository.findById(id).orElse(null);
+        Optional<Medico> optMedico = medicoRepository.findById(id);
 
-        if (medico == null) {
-            mapResponse.put("error", "Médico no encontrado con ID: " + id);
+        if (optMedico.isEmpty()) {
+
+            mapResponse.put("error", "No se pudo encontrar el médico con ID: " + id);
+            mapResponse.put("code", 404);
+
             return mapResponse;
+
         }
 
-        medicoRepository.deleteById(id);
+        Medico medico = optMedico.get();
+
+        medicoRepository.delete(medico);
 
         mapResponse.put("message", "Médico eliminado correctamente");
         mapResponse.put("medicoEliminado", medico);
+        mapResponse.put("code", 200);
 
         return mapResponse;
     }
@@ -163,6 +211,7 @@ public class MedicoService {
         newMedico.setApellido(medico.getApellido());
         newMedico.setEspecialidad(medico.getEspecialidad());
         newMedico.setNumeroConsultorio(medico.getNumeroConsultorio());
+        newMedico.setOcupado(medico.getOcupado());
 
         return newMedico;
 
@@ -170,6 +219,8 @@ public class MedicoService {
 
     /**
      * Busca médicos por especialidad
+     * @param especialidad Especialidad a buscar
+     * @return Mapa con la respuesta de la búsqueda
      */
     public CustomMap<String, Object> getByEspecialidad(String especialidad) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -210,6 +261,8 @@ public class MedicoService {
 
     /**
      * Busca médicos por número de consultorio
+     * @param numeroConsultorio Número de consultorio a buscar
+     * @return Mapa con la respuesta de la búsqueda
      */
     public CustomMap<String, Object> getByConsultorio(Integer numeroConsultorio) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
@@ -242,4 +295,103 @@ public class MedicoService {
 
         return mapResponse;
     }
+
+    /**
+     * Obtiene la lista de médicos disponibles (no ocupados)
+     * @return Mapa con la lista de médicos disponibles
+     */
+    public CustomMap<String, Object> getMedicosDisponibles() {
+
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+        ListaSimple<Medico> medicosDisponibles = new ListaSimple<>();
+
+        for (Medico medico : medicoRepository.findAll())
+            if (medico.getOcupado() != null && !medico.getOcupado()) {
+                System.out.println("Medico ID: " + medico.getId() +
+                        " - Ocupado: " + medico.getOcupado());
+                medicosDisponibles.add(medico);
+            }
+        if (medicosDisponibles.isEmpty()) {
+
+            mapResponse.put("message", "No hay médicos disponibles en este momento");
+            mapResponse.put("code", 404);
+
+            return mapResponse;
+
+        }
+
+        mapResponse.put("message", "Médicos disponibles");
+        mapResponse.put("listMedicos", medicosDisponibles);
+        mapResponse.put("code", 200);
+
+        return mapResponse;
+
+    }
+
+    /**
+     * Marca a un médico como ocupado
+     * @param idMedico ID del médico a marcar como ocupado
+     * @return Mapa con la respuesta de la operación
+     */
+    public CustomMap<String, Object> marcarOcupado(Integer idMedico) {
+
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        Optional<Medico> optMedico = medicoRepository.findById(idMedico);
+
+        if (optMedico.isEmpty()) {
+
+            mapResponse.put("error", "No se pudo encontrar el médico con ID: " + idMedico);
+            mapResponse.put("code", 404);
+
+            return mapResponse;
+
+        }
+
+        Medico medico = optMedico.get();
+        medico.setOcupado(true);
+
+        medicoRepository.save(medico);
+
+        mapResponse.put("medico", medico);
+        mapResponse.put("message", "Estado de ocupación actualizado exitosamente");
+        mapResponse.put("code", 200);
+
+        return mapResponse;
+
+    }
+
+    /**
+     * Marca a un médico como disponible
+     * @param idMedico ID del médico a marcar como disponible
+     * @return Mapa con la respuesta de la operación
+     */
+    public CustomMap<String, Object> marcarDisponible(Integer idMedico) {
+
+        CustomMap<String, Object> mapResponse = new CustomMap<>();
+
+        Optional<Medico> optMedico = medicoRepository.findById(idMedico);
+
+        if (optMedico.isEmpty()) {
+
+            mapResponse.put("error", "No se pudo encontrar el médico con ID: " + idMedico);
+            mapResponse.put("code", 404);
+
+            return mapResponse;
+
+        }
+
+        Medico medico = optMedico.get();
+        medico.setOcupado(false);
+
+        medicoRepository.save(medico);
+
+        mapResponse.put("medico", medico);
+        mapResponse.put("message", "Estado de ocupación actualizado exitosamente");
+        mapResponse.put("code", 200);
+
+        return mapResponse;
+
+    }
+
 }

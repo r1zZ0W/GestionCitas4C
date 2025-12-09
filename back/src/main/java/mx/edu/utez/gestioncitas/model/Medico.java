@@ -28,6 +28,9 @@ public class Medico {
     @Column(nullable = false)
     private Integer numeroConsultorio;
 
+    @Column(nullable = false)
+    private Boolean ocupado = false;
+
     // Constructor vacío
     public Medico() {}
 
@@ -72,6 +75,14 @@ public class Medico {
         this.numeroConsultorio = numeroConsultorio;
     }
 
+    public Boolean getOcupado() {
+        return ocupado;
+    }
+
+    public void setOcupado(Boolean ocupado) {
+        this.ocupado = ocupado;
+    }
+
     @Override
     public String toString() {
         return "\n--- DATOS DEL MÉDICO ---\n" +
@@ -80,6 +91,7 @@ public class Medico {
                 "  Apellido: " + apellido + "\n" +
                 "  Especialidad: " + especialidad + "\n" +
                 "  Número de Consultorio: " + numeroConsultorio + "\n" +
+                "  Estado: " + (ocupado ? "Ocupado" : "Libre")+ "\n" +
                 "--------------------------";
     }
 

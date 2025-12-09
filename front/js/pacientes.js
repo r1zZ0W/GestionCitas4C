@@ -28,7 +28,8 @@ document.getElementById('formPaciente').addEventListener('submit', async (e) => 
         direccion: inpDireccion.value,
         correoElectronico: inpCorreoElectronico.value,
         sexo: radioSexo ? radioSexo.value : null,
-        prioridad: inpPrioridad.value
+        prioridad: inpPrioridad.value,
+        enAtencion: false
     };
 
     const URL = 'http://localhost:8080/api/paciente';

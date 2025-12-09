@@ -49,6 +49,9 @@ public class Paciente {
     @DateTimeFormat(pattern = "yyyy-MM-dd") // Formateador de fecha para compatibilidad con el front-end
     private LocalDate fechaNacimiento;
 
+    @Column
+    private Boolean enAtencion; // Indica si el paciente está en atención
+
     @Transient // No se mapea en la base de datos
     private ListaSimple<Cita> citas = new ListaSimple<>();
 
@@ -136,6 +139,14 @@ public class Paciente {
         this.citas = citas;
     }
 
+    public Boolean getEnAtencion() {
+        return enAtencion;
+    }
+
+    public void setEnAtencion(Boolean enAtencion) {
+        this.enAtencion = enAtencion;
+    }
+
     // Metodo toString para pruebas xd
     @Override
     public String toString() {
@@ -149,6 +160,7 @@ public class Paciente {
                 "  Correo Electrónico: " + correoElectronico + "\n" +
                 "  Sexo: " + sexo + "\n" +
                 "  Prioridad: " + prioridad + "\n" +
+                "  Atendido: " + (enAtencion ? "Sí" : "No") + "\n" +
                 "--------------------------";
     }
 }

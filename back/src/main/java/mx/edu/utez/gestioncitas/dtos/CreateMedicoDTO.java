@@ -14,6 +14,7 @@ public class CreateMedicoDTO {
     private String apellido;
     private String especialidad;
     private Integer numeroConsultorio;
+    private Boolean ocupado;
 
     // Constructor vacío
     public CreateMedicoDTO() {}
@@ -51,6 +52,14 @@ public class CreateMedicoDTO {
         this.numeroConsultorio = numeroConsultorio;
     }
 
+    public Boolean getOcupado() {
+        return ocupado;
+    }
+
+    public void setOcupado(Boolean ocupado) {
+        this.ocupado = ocupado;
+    }
+
     @Override
     public String toString() {
         return "\n--- DATOS DEL MÉDICO ---\n" +
@@ -58,6 +67,7 @@ public class CreateMedicoDTO {
                 "  Apellido: " + apellido + "\n" +
                 "  Especialidad: " + especialidad + "\n" +
                 "  Número de Consultorio: " + numeroConsultorio + "\n" +
+                "  Estado: " + (ocupado ? "Ocupado" : "Libre")+ "\n" +
                 "--------------------------";
     }
 

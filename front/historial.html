@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        
+        <!--Bustra -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        <!-- Bustra Icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    
+    <body>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+            <div class="container">
+                <a class="navbar-brand" href="index.html">
+                    Gestión de Citas Médicas
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="pacientes.html">Pacientes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="medicos.html">Médicos</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="citas.html">Citas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="historial.html">Historial</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Lista de Historial</h5>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnListarHistorial">
+                        Actualizar Lista
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table id="tblHistorial" class="table table-striped table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Fecha de Atencion</th>
+                                <th>Paciente Atendido</th>
+                                <th>Medico Atendido</th>
+                                <th>Prioridad</th>
+                                <th>Motivo de la Consulta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHistorial">
+                            <!-- datos datosos aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script src="js/historial.js"></script>
+</html>

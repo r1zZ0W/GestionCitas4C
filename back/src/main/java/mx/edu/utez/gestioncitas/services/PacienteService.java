@@ -159,6 +159,9 @@ public class PacienteService {
         if (paciente.getPrioridad() != null)
             pacienteExistente.setPrioridad(paciente.getPrioridad());
 
+        if (paciente.getEnAtencion() != null)
+            pacienteExistente.setEnAtencion(paciente.getEnAtencion());
+
         // Guardar cambios en BD
         pacienteRepository.save(pacienteExistente);
 
@@ -188,6 +191,7 @@ public class PacienteService {
         newPaciente.setDireccion(paciente.getDireccion());
         newPaciente.setFechaNacimiento(paciente.getFechaNacimiento());
         newPaciente.setPrioridad(paciente.getPrioridad());
+        newPaciente.setEnAtencion(paciente.getEnAtencion());
 
         return newPaciente;
 
@@ -307,4 +311,5 @@ public class PacienteService {
 
         return mapResponse;
     }
+
 }

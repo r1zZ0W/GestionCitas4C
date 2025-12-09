@@ -25,6 +25,8 @@ public class CreatePacienteDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd") // Formateador de fecha para compatibilidad en el frontend
     private LocalDate fechaNacimiento;
 
+    private Boolean enAtencion;
+
     // Constructor vacío
     public CreatePacienteDTO() {}
 
@@ -93,6 +95,14 @@ public class CreatePacienteDTO {
         this.prioridad = prioridad;
     }
 
+    public Boolean getEnAtencion() {
+        return enAtencion;
+    }
+
+    public void setEnAtencion(Boolean enAtencion) {
+        this.enAtencion = enAtencion;
+    }
+
     @Override
     public String toString() {
         return "\n--- DATOS DEL PACIENTE ---\n" +
@@ -104,6 +114,7 @@ public class CreatePacienteDTO {
                 "  Correo Electrónico: " + correoElectronico + "\n" +
                 "  Sexo: " + sexo + "\n" +
                 "  Prioridad: " + prioridad + "\n" +
+                "  Atendido: " + (enAtencion ? "Sí" : "No") + "\n" +
                 "--------------------------";
     }
 

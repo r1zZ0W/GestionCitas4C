@@ -4,9 +4,10 @@ import mx.edu.utez.gestioncitas.data_structs.CustomMap;
 import mx.edu.utez.gestioncitas.dtos.CreatePacienteDTO;
 import mx.edu.utez.gestioncitas.services.PacienteService;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static mx.edu.utez.gestioncitas.util.Status.getStatus;
 
 /**
  * Controlador REST para gestionar las operaciones relacionadas con los pacientes.
@@ -40,7 +41,7 @@ public class PacienteController {
         // Obtener el código de estado del mapa de respuesta
         int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, getCode(code));
+        return new ResponseEntity<>(mapResponse, getStatus(code));
 
     }
 
@@ -56,7 +57,7 @@ public class PacienteController {
         // Obtener el código de estado del mapa de respuesta
         int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, getCode(code));
+        return new ResponseEntity<>(mapResponse, getStatus(code));
     }
 
     /**
@@ -73,7 +74,7 @@ public class PacienteController {
 
         int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, code == 201 ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(mapResponse, getStatus(code));
 
     }
 
@@ -90,7 +91,7 @@ public class PacienteController {
         CustomMap<String, Object> mapResponse = pacienteService.update(id, paciente);
         int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, getCode(code));
+        return new ResponseEntity<>(mapResponse, getStatus(code));
     }
 
     /**
@@ -104,7 +105,7 @@ public class PacienteController {
         CustomMap<String, Object> mapResponse = pacienteService.delete(id);
         int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, getCode(code));
+        return new ResponseEntity<>(mapResponse, getStatus(code));
 
     }
 
@@ -118,25 +119,10 @@ public class PacienteController {
         CustomMap<String, Object> mapResponse = pacienteService.getAllPrioridadAsc();
         int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, getCode(code));
+        return new ResponseEntity<>(mapResponse, getStatus(code));
 
     }
 
-    /**
-     * HELPER -
-     * Convierte un código entero a HttpStatus rescatado del mapa de respuesta a un HttpStatus
-     * @param code Código entero rescatado del mapa de respuesta
-     * @return HttpStatus correspondiente al código entero
-     */
-    private HttpStatus getCode(int code) {
 
-        if (code == 200) return HttpStatus.OK;
-        if (code == 201) return HttpStatus.CREATED;
-        if (code == 400) return HttpStatus.BAD_REQUEST;
-        if (code == 404) return HttpStatus.NOT_FOUND;
-
-        return HttpStatus.INTERNAL_SERVER_ERROR;
-
-    }
 
 }

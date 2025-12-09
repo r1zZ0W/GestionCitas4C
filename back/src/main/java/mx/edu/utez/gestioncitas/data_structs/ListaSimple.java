@@ -8,6 +8,7 @@ import mx.edu.utez.gestioncitas.serializers.ListaSimpleSerializer;
 
 import java.util.AbstractList;
 import java.util.Collection;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 /**
@@ -184,5 +185,24 @@ public class ListaSimple<T> extends AbstractList<T> {
             current = current.getNext();
         }
         return null;
+    }
+
+    /**
+     * Retorna el primer elemento (dato) de la lista.
+     * * @return El elemento de tipo T en la cabeza (head) de la lista.
+     * @throws NoSuchElementException Si la lista está vacía.
+     */
+    @Override
+    public T getFirst() {
+
+        // 1. Verificar si la lista está vacía
+        if (head == null) {
+            // O si size == 0, dependiendo de cómo manejes la lista.
+            // Es crucial para evitar un NullPointerException.
+            throw new NoSuchElementException("La lista está vacía.");
+        }
+
+        // 2. Retornar el dato del nodo apuntado por 'head'
+        return head.getData();
     }
 }

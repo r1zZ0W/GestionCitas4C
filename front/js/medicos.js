@@ -19,7 +19,8 @@ document.getElementById('formMedico').addEventListener('submit', async (e) => {
         nombre: inpNombreMedico.value,
         apellido: inpApellidosMedico.value,
         especialidad: inpEspecialidad.value,
-        numeroConsultorio: parseInt(inpNumeroConsultorio.value)
+        numeroConsultorio: parseInt(inpNumeroConsultorio.value),
+        ocupado: false
     };
 
     const URL = 'http://localhost:8080/api/medico';

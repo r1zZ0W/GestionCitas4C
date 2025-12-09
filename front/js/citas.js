@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Función para llenar el formulario con valores de prueba
 function llenarFormularioPrueba() {
+
     // Establecer fecha de hoy
     const hoy = new Date();
     const fechaStr = hoy.toISOString().split('T')[0];
@@ -50,18 +51,136 @@ function llenarFormularioPrueba() {
             selectMedico.selectedIndex = 1; // Primera opción después de "Seleccione..."
         }
     }, 500); // Esperar a que se carguen los selects
+
 }
 
 btnAtenderPaciente.addEventListener('click', async () => {
 
-    
-
+    try {
+        // 1. Obtener el primer paciente de prioridad
+        const responsePacientes = await fetch('http://localhost:8080/api/paciente/prioridad/asc', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const dataPacientes = await responsePacientes.json();
+        const listaPacientes = dataPacientes.listPacientes;
+        
+        if (!listaPacientes || listaPacientes.length === 0) {
+            alert('No hay pacientes en espera');
+            return;
+        }
+        
+        const pacienteAAtender = listaPacientes[0]; // Primer paciente (mayor prioridad)
+        
+        // 2. Obtener un médico DISPONIBLE
+        const responseMedicos = await fetch('http://localhost:8080/api/medico/disponibles', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const dataMedicos = await responseMedicos.json();
+        const listaMedicos = dataMedicos.listMedicos;
+        
+        if (!listaMedicos || listaMedicos.length === 0) {
+            alert('No hay médicos disponibles en este momento');
+            return;
+        }
+        
+        const medicoDisponible = listaMedicos[0]; // Primer médico disponible
+        
+        // Confirmar antes de atender
+        if (!confirm(`¿Atender a ${pacienteAAtender.nombre} ${pacienteAAtender.apellido} con Dr(a). ${medicoDisponible.nombre} ${medicoDisponible.apellido}?`)) {
+            return;
+        }
+        
+        // 3. Crear la cita automáticamente
+        const ahora = new Date();
+        const fecha = ahora.toISOString().split('T')[0];
+        const hora = ahora.toTimeString().slice(0, 5);
+        
+        let prioridadTexto = '';
+        if (pacienteAAtender.prioridad === 1) prioridadTexto = 'Alta';
+        else if (pacienteAAtender.prioridad === 2) prioridadTexto = 'Media';
+        else prioridadTexto = 'Baja';
+        
+        const nuevaCita = {
+            fecha: fecha,
+            hora: hora,
+            paciente: pacienteAAtender,
+            medicoAsignado: medicoDisponible,
+            motivoConsulta: `Atención por prioridad: ${prioridadTexto}`,
+            estado: 'P' // P = Programada
+        };
+        
+        // 4. Guardar la cita
+        const responseCita = await fetch('http://localhost:8080/api/cita', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(nuevaCita)
+        });
+        
+        if (!responseCita.ok) {
+            const error = await responseCita.json();
+            alert('Error al crear la cita: ' + (error.error || 'Error desconocido'));
+            return;
+        }
+        
+        // 5. Marcar al médico como ocupado
+        await fetch(`http://localhost:8080/api/medico/${medicoDisponible.id}/ocupado`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        // 6. Mostrar mensaje de éxito
+        alert(`✅ Paciente ${pacienteAAtender.nombre} ${pacienteAAtender.apellido} está siendo atendido por Dr(a). ${medicoDisponible.nombre} ${medicoDisponible.apellido}`);
+        
+        // 7. Actualizar las listas
+        await cargarPacientesPrioridad();
+        await listarCitas();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al atender paciente: ' + error.message);
+    }
 });
 
-async function atenderPaciente() {
-    
-
-
+// Función para finalizar consulta y liberar médico
+async function finalizarConsultaYLiberarMedico(citaId, medicoId) {
+    try {
+        // 1. Atender la cita (marcarla como finalizada)
+        const responseAtender = await fetch('http://localhost:8080/api/cita/cola/atender', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (responseAtender.ok) {
+            // 2. Liberar al médico
+            await fetch(`http://localhost:8080/api/medico/${medicoId}/disponible`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            alert('Consulta finalizada y médico liberado');
+            await listarCitas();
+            await cargarPacientesPrioridad();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al finalizar consulta');
+    }
 }
 
 async function cargarPacientesPrioridad() {

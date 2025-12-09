@@ -10,6 +10,8 @@ import mx.edu.utez.gestioncitas.dtos.CreateCitaDTO;
 import mx.edu.utez.gestioncitas.model.Cita;
 
 import mx.edu.utez.gestioncitas.repository.CitaRepository;
+
+
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -184,24 +186,24 @@ public class CitaService {
         
         Cita citaExistente = optCita.get();
 
-        if (cita.getFecha() != null) {
+        if (cita.getFecha() != null)
             citaExistente.setFecha(cita.getFecha());
-        }
-        if (cita.getHora() != null) {
+
+        if (cita.getHora() != null)
             citaExistente.setHora(cita.getHora());
-        }
-        if (cita.getPaciente() != null) {
+
+        if (cita.getPaciente() != null)
             citaExistente.setPaciente(cita.getPaciente());
-        }
-        if (cita.getMedicoAsignado() != null) {
+
+        if (cita.getMedicoAsignado() != null)
             citaExistente.setMedicoAsignado(cita.getMedicoAsignado());
-        }
-        if (cita.getMotivoConsulta() != null) {
+
+        if (cita.getMotivoConsulta() != null)
             citaExistente.setMotivoConsulta(cita.getMotivoConsulta());
-        }
-        if (cita.getEstado() != null) {
+
+        if (cita.getEstado() != null)
             citaExistente.setEstado(cita.getEstado());
-        }
+
         return citaExistente;
     }
 
@@ -226,6 +228,8 @@ public class CitaService {
         
         Cita citaExistente = cita.get();
 
+        citaExistente.getMedicoAsignado().setOcupado(false);
+        
         citaRepository.delete(citaExistente);
 
         mapResponse.put("message", "Cita eliminada correctamente");
@@ -323,12 +327,18 @@ public class CitaService {
     public CustomMap<String, Object> agregarCitaACola(Integer id) {
         CustomMap<String, Object> mapResponse = new CustomMap<>();
 
-        Cita cita = citaRepository.findById(id).orElse(null);
+        Optional<Cita> optCita = citaRepository.findById(id);
 
-        if (cita == null) {
+        if (optCita.isEmpty()) {
+
             mapResponse.put("error", "Cita no encontrada con ID: " + id);
+            mapResponse.put("code", 404);
+
             return mapResponse;
+
         }
+
+        Cita cita = optCita.get();
 
         if (cita.getEstado() != 'A' && cita.getEstado() != 'P') {
             mapResponse.put("error", "Solo se pueden agregar citas activas (A) o programadas (P) a la cola");

@@ -197,5 +197,4 @@ public class CitaController {
         
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
-
 }

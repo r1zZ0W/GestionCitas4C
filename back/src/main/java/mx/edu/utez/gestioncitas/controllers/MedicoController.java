@@ -5,9 +5,12 @@ import mx.edu.utez.gestioncitas.dtos.CreateMedicoDTO;
 import mx.edu.utez.gestioncitas.model.Medico;
 import mx.edu.utez.gestioncitas.services.MedicoService;
 
+import mx.edu.utez.gestioncitas.util.Status;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static mx.edu.utez.gestioncitas.util.Status.getStatus;
 
 /**
  * Controlador REST para gestionar las operaciones CRUD de los médicos.
@@ -52,8 +55,9 @@ public class MedicoController {
     public ResponseEntity<Object> getById(@PathVariable Integer id) {
 
         CustomMap<String, Object> mapResponse = medicoService.getById(id);
+        int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+        return new ResponseEntity<>(mapResponse, getStatus(code));
     }
 
     /**
@@ -65,10 +69,11 @@ public class MedicoController {
     public ResponseEntity<Object> create(@RequestBody CreateMedicoDTO medico) {
 
         CustomMap<String, Object> mapResponse = medicoService.create(medico);
+        int code = (int) mapResponse.get("code");
 
         System.out.println(medico);
 
-        return new ResponseEntity<>(mapResponse, HttpStatus.CREATED);
+        return new ResponseEntity<>(mapResponse, getStatus(code));
 
     }
 
@@ -83,8 +88,10 @@ public class MedicoController {
                                          @PathVariable Integer id) {
 
         CustomMap<String, Object> mapResponse = medicoService.update(id, medico);
+        int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+        return new ResponseEntity<>(mapResponse, getStatus(code));
+
     }
 
     /**
@@ -96,8 +103,48 @@ public class MedicoController {
     public ResponseEntity<Object> delete(@PathVariable Integer id) {
 
         CustomMap<String, Object> mapResponse = medicoService.delete(id);
+        int code = (int) mapResponse.get("code");
 
-        return new ResponseEntity<>(mapResponse, HttpStatus.OK);
+        return new ResponseEntity<>(mapResponse, getStatus(code));
+
+    }
+
+    /**
+     * Obtiene todos los médicos disponibles.
+     * @return ResponseEntity con un CustomMap que contiene la lista de médicos disponibles y el estado HTTP correspondiente.
+     */
+    @GetMapping("/disponibles")
+    public ResponseEntity<Object> getMedicosDisponibles() {
+
+        CustomMap<String, Object> mapResponse = medicoService.getMedicosDisponibles();
+        int code = (int) mapResponse.get("code");
+
+        return new ResponseEntity<>(mapResponse, getStatus(code));
+
+    }
+
+    /**
+     * Marca un médico como ocupado.
+     * @param id ID del médico a marcar como ocupado.
+     * @return ResponseEntity con un CustomMap que contiene el resultado de la operación y el estado HTTP correspondiente.
+     */
+    @PutMapping("{id}/ocupado")
+    public ResponseEntity<Object> marcarOcupado(@PathVariable Integer id) {
+
+        CustomMap<String, Object> mapResponse = medicoService.marcarOcupado(id);
+        int code = (int) mapResponse.get("code");
+
+        return new ResponseEntity<>(mapResponse, getStatus(code));
+
+    }
+
+    @PutMapping("{id}/disponible")
+    public ResponseEntity<Object> marcarDisponible(@PathVariable Integer id) {
+
+        CustomMap<String, Object> mapResponse = medicoService.marcarDisponible(id);
+        int code = (int) mapResponse.get("code");
+
+        return new ResponseEntity<>(mapResponse, getStatus(code));
 
     }
 
