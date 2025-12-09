@@ -10,6 +10,7 @@ import java.util.AbstractList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Clase que representa una lista enlazada simple genérica. Utiliza Serialización y Deserialización personalizada para JSON.
@@ -224,5 +225,63 @@ public class ListaSimple<T> extends AbstractList<T> {
 
         // 2. Retornar el dato del nodo apuntado por 'head'
         return head.getData();
+    }
+
+    /**
+     * Remueve todos los elementos que cumplen con el predicado dado.
+     * @param filter el predicado que determina qué elementos eliminar
+     * @return true si se eliminó al menos un elemento, false en caso contrario
+     * @throws NullPointerException si el predicado es nulo
+     */
+    @Override
+    public boolean removeIf(Predicate<? super T> filter) {
+
+        if (filter == null)
+            throw new NullPointerException("El filtro no puede ser nulo");
+
+
+        boolean removed = false;
+        Nodo<T> current = head;
+        Nodo<T> prev = null;
+
+        while (current != null) {
+            // Guardamos referencia al siguiente antes de (posiblemente) eliminar
+            Nodo<T> nextNode = current.getNext();
+
+            if (filter.test(current.getData())) {
+                // --- CASO: ELIMINAR NODO ---
+                removed = true;
+                size--;
+
+                if (prev == null) {
+                    // Caso 1: Estamos eliminando la cabeza (head)
+                    head = nextNode;
+
+                    // Si la lista se vacía, tail también debe ser null
+                    if (head == null)
+                        tail = null;
+
+                } else {
+                    // Caso 2: Estamos eliminando un nodo intermedio o final
+                    prev.setNext(nextNode);
+
+                    // Si eliminamos el último nodo, actualizamos tail
+                    if (current == tail)
+                        tail = prev;
+
+                }
+                // Importante: No avanzamos 'prev', porque el actual fue borrado
+                // y el 'prev' sigue siendo el anterior del nuevo 'current'.
+            } else {
+                // --- CASO: CONSERVAR NODO ---
+                // Solo avanzamos 'prev' si no eliminamos el nodo actual
+                prev = current;
+            }
+
+            // Avanzamos al siguiente nodo para la próxima iteración
+            current = nextNode;
+        }
+
+        return removed;
     }
 }

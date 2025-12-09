@@ -290,15 +290,12 @@ public class PacienteService {
     public CustomMap<String, Object> getAllPrioridadAsc() {
 
         CustomMap<String, Object> mapResponse = new CustomMap<>();
-        ListaSimple<Paciente> listaSimple = new ListaSimple<>();
 
         // Obtener todos los pacientes y filtrar los que NO están en atención
         ListaSimple<Paciente> pacientesDisponibles = new ListaSimple<>();
-        for (Paciente p : pacienteRepository.findAll()) {
-            if (p.getEnAtencion() == null || !p.getEnAtencion()) {
+        for (Paciente p : pacienteRepository.findAll())
+            if (p.getEnAtencion() == null || !p.getEnAtencion())
                 pacientesDisponibles.add(p);
-            }
-        }
 
         // Ordenar por prioridad usando MergeSort
         ListaSimple<Paciente> listaPrioridad = MergeSort.sortByPrioridadAsc(pacientesDisponibles);

@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -43,6 +44,10 @@ public class CitaService {
     private final Pila<Cita> pilaHistorialCitas = new Pila<>();
     private final BinaryTree<Cita> arbolBusquedaHistorial; // Para búsqueda eficiente
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+
+    private final CustomMap<Integer, ScheduledFuture<?>> tareasProgramadas = new CustomMap<>();
+
+
     private final Random random = new Random();
 
     /**
@@ -210,6 +215,18 @@ public class CitaService {
         }
 
         Cita citaExistente = getExistente(cita, optCita);
+
+        if (citaExistente.getEstado() == 'F' || citaExistente.getEstado() == 'C') {
+            if (citaExistente.getMedicoAsignado() != null) {
+                citaExistente.getMedicoAsignado().setOcupado(false);
+                medicoRepository.save(citaExistente.getMedicoAsignado());
+            }
+            if (citaExistente.getPaciente() != null) {
+                citaExistente.getPaciente().setEnAtencion(false);
+                pacienteRepository.save(citaExistente.getPaciente());
+            }
+        }
+
         citaRepository.save(citaExistente);
 
         mapResponse.put("message", "Cita actualizada exitosamente");
@@ -271,7 +288,28 @@ public class CitaService {
         
         Cita citaExistente = cita.get();
 
-        citaExistente.getMedicoAsignado().setOcupado(false);
+        ScheduledFuture<?> tarea = tareasProgramadas.get(id);
+        if (tarea != null && !tarea.isDone()) {
+            tarea.cancel(false); // Cancelar sin interrumpir si ya está ejecutándose
+            tareasProgramadas.remove(id);
+            System.out.println("Tarea programada cancelada para cita ID: " + id);
+        }
+
+        // Liberar al médico
+        if (citaExistente.getMedicoAsignado() != null) {
+
+            citaExistente.getMedicoAsignado().setOcupado(false);
+            medicoRepository.save(citaExistente.getMedicoAsignado());
+
+        }
+
+        // Marcar al paciente como no en atención
+        if (citaExistente.getPaciente() != null) {
+
+            citaExistente.getPaciente().setEnAtencion(false);
+            pacienteRepository.save(citaExistente.getPaciente());
+
+        }
         
         citaRepository.delete(citaExistente);
 
@@ -434,40 +472,47 @@ public class CitaService {
         int tiempoEspera = 6; // 6 segundos
 
         // Programar tarea para quitar al paciente de la lista después del timeout
-        scheduler.schedule(() -> {
+        ScheduledFuture<?> tareaFutura = scheduler.schedule(() -> {
             try {
                 // Obtener el paciente actualizado de la BD
                 Optional<Paciente> optPaciente = pacienteRepository.findById(pacienteAAtender.getId());
                 if (optPaciente.isPresent()) {
                     Paciente paciente = optPaciente.get();
-                    
+
+                    // Verificar que la cita todavía existe y está en estado 'E'
+                    Optional<Cita> optCita = citaRepository.findById(nuevaCita.getId());
+                    if (optCita.isEmpty() || optCita.get().getEstado() != 'E') {
+                        // La cita fue eliminada o ya finalizada, no hacer nada
+                        tareasProgramadas.remove(nuevaCita.getId());
+                        return;
+                    }
+
                     // Quitar de la lista (marcar como no en atención)
                     paciente.setEnAtencion(false);
-                    
-                    // Finalizar la cita
-                    Optional<Cita> optCita = citaRepository.findById(nuevaCita.getId());
-                    if (optCita.isPresent()) {
-                        Cita cita = optCita.get();
-                        cita.setEstado('F'); // F = Finalizada
-                        
-                        // Liberar al médico
-                        if (cita.getMedicoAsignado() != null) {
-                            Medico medico = cita.getMedicoAsignado();
-                            medico.setOcupado(false);
-                            medicoRepository.save(medico);
-                        }
-                        
-                        citaRepository.save(cita);
-                        
-                        // Agregar al historial (Pila) y al árbol de búsqueda
-                        pilaHistorialCitas.push(cita);
-                        arbolBusquedaHistorial.insert(cita);
+
+                    Cita cita = optCita.get();
+                    cita.setEstado('F'); // F = Finalizada
+
+                    // Liberar al médico
+                    if (cita.getMedicoAsignado() != null) {
+                        Medico medico = cita.getMedicoAsignado();
+                        medico.setOcupado(false);
+                        medicoRepository.save(medico);
                     }
-                    
+
+                    citaRepository.save(cita);
                     pacienteRepository.save(paciente);
+
+                    // Agregar al historial
+                    pilaHistorialCitas.push(cita);
+                    arbolBusquedaHistorial.insert(cita);
+
+                    // Remover tarea del mapa
+                    tareasProgramadas.remove(nuevaCita.getId());
                 }
             } catch (Exception e) {
                 System.err.println("Error al procesar timeout de atención: " + e.getMessage());
+                tareasProgramadas.remove(nuevaCita.getId());
             }
         }, tiempoEspera, TimeUnit.SECONDS);
 
