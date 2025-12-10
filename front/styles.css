@@ -271,6 +271,18 @@ body {
     color: white;
 }
 
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.25);
+    color: white;
+}
+
 .btn-secondary {
     background-color: var(--bg-rose);
     color: var(--text-dark);

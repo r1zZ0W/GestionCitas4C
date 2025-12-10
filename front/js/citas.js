@@ -405,10 +405,10 @@ async function listarCitas() {
             <td class="${estadoClass}">${estadoTexto}</td>
             <td class="text-center">
                 <button class="btn btn-sm btn-primary btnEditarCita me-1" style="padding: 0.375rem 0.75rem; min-width: 38px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;" data-id="${cita.id}" title="Editar">
-                    <i class="fas fa-edit" style="font-size: 14px; display: inline-block;"></i>
+                    <i class="fas fa-edit" style="font-size: 14px; display: inline-block; font-family: 'Font Awesome 6 Free'; font-weight: 900; opacity: 1; visibility: visible;"></i>
                 </button>
                 <button class="btn btn-danger btn-sm btnEliminarCita" style="padding: 0.375rem 0.75rem; min-width: 38px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;" data-id="${cita.id}" title="Eliminar">
-                    <i class="fas fa-trash" style="font-size: 14px; display: inline-block;"></i>
+                    <i class="fas fa-trash" style="font-size: 14px; display: inline-block; font-family: 'Font Awesome 6 Free'; font-weight: 900; opacity: 1; visibility: visible;"></i>
                 </button>
             </td>
         </tr>
