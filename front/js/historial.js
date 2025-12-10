@@ -5,12 +5,12 @@ const inpBuscarPaciente = document.getElementById('inpBuscarPaciente');
 const tbodyHistorial = document.getElementById('tbodyHistorial');
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ Página de historial cargada');
+    console.log('Página de historial cargada');
     cargarHistorial();
 });
 
 btnListarHistorial.addEventListener('click', async () => {
-    console.log('🖱️ Botón "Actualizar Lista" clickeado');
+    console.log('Botón "Actualizar Lista" clickeado');
     await cargarHistorial();
 });
 
@@ -41,7 +41,7 @@ inpBuscarPaciente.addEventListener('keypress', async (e) => {
 async function cargarHistorial() {
     try {
         const URL = 'http://localhost:8080/api/cita/pila/historial';
-        console.log('🔍 Intentando conectar a:', URL);
+        console.log('Intentando conectar a:', URL);
         
         const response = await fetch(
             URL, {
@@ -52,7 +52,7 @@ async function cargarHistorial() {
             }
         );
 
-        console.log('📡 Respuesta recibida:', response.status, response.statusText);
+        console.log('Respuesta recibida:', response.status, response.statusText);
 
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
@@ -131,7 +131,7 @@ async function cargarHistorial() {
 async function buscarPorPaciente(nombre) {
     try {
         const URL = `http://localhost:8080/api/cita/historial/buscar/paciente?nombre=${encodeURIComponent(nombre)}`;
-        console.log('🔍 Buscando paciente:', nombre);
+        console.log('Buscando paciente:', nombre);
         
         const response = await fetch(URL, {
             method: 'GET',

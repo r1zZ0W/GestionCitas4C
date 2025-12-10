@@ -84,7 +84,7 @@ btnAtenderPaciente.addEventListener('click', async () => {
         const tiempoEspera = data.tiempoEspera || 30;
         
         // Mostrar mensaje de éxito
-        alert(`✅ Paciente ${paciente.nombre} ${paciente.apellido} está en atención.\nSerá finalizado automáticamente en ${tiempoEspera} segundos y agregado al historial.`);
+        alert(`Paciente ${paciente.nombre} ${paciente.apellido} está en atención.\nSerá finalizado automáticamente en ${tiempoEspera} segundos y agregado al historial.`);
         
         // Actualizar las listas
         await cargarPacientesPrioridad();
