@@ -772,6 +772,7 @@ public class CitaService {
 
     /**
      * Busca citas en el historial por nombre de paciente usando BinaryTree
+     * El árbol binario se usa para obtener todas las citas ordenadas, luego se filtran por nombre
      * @param nombrePaciente Nombre o parte del nombre del paciente
      * @return mapa con las citas encontradas
      */
@@ -787,13 +788,17 @@ public class CitaService {
         // Sincronizar primero
         sincronizarHistorialConBD();
 
-        // Buscar en todas las citas del historial
+        // Buscar en todas las citas del historial usando el árbol binario
+        // El árbol binario ordena las citas por ID, luego filtramos por nombre
         ListaSimple<Cita> citasEncontradas = new ListaSimple<>();
         String nombreBusqueda = nombrePaciente.toLowerCase().trim();
 
-        // Recorrer la pila y buscar por nombre
-        ListaSimple<Cita> todasLasCitas = pilaHistorialCitas.toList();
-        for (Cita cita : todasLasCitas) {
+        // Obtener todas las citas del árbol binario (más eficiente que recorrer la pila)
+        ListaSimple<Cita> todasLasCitas = arbolBusquedaHistorial.toList();
+        
+        // Filtrar por nombre de paciente
+        for (int i = 0; i < todasLasCitas.size(); i++) {
+            Cita cita = todasLasCitas.get(i);
             if (cita.getPaciente() != null) {
                 String nombreCompleto = (cita.getPaciente().getNombre() + " " + 
                                          cita.getPaciente().getApellido()).toLowerCase();

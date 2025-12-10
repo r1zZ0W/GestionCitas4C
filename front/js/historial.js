@@ -1,41 +1,64 @@
-const btnListarHistorial = document.getElementById('btnListarHistorial');
-const btnBuscar = document.getElementById('btnBuscar');
-const btnLimpiarBusqueda = document.getElementById('btnLimpiarBusqueda');
-const inpBuscarPaciente = document.getElementById('inpBuscarPaciente');
-const tbodyHistorial = document.getElementById('tbodyHistorial');
-
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Página de historial cargada');
-    cargarHistorial();
-});
-
-btnListarHistorial.addEventListener('click', async () => {
-    console.log('Botón "Actualizar Lista" clickeado');
-    await cargarHistorial();
-});
-
-btnBuscar.addEventListener('click', async () => {
-    const nombre = inpBuscarPaciente.value.trim();
-    if (nombre) {
-        await buscarPorPaciente(nombre);
-    } else {
-        alert('Por favor ingresa un nombre para buscar');
+    
+    const btnListarHistorial = document.getElementById('btnListarHistorial');
+    const btnBuscarPaciente = document.getElementById('btnBuscarPaciente');
+    const btnLimpiarBusqueda = document.getElementById('btnLimpiarBusqueda');
+    const inpBuscarPaciente = document.getElementById('inpBuscarPaciente');
+    
+    // Verificar que los elementos existan
+    console.log('Elementos encontrados:', {
+        btnListarHistorial: !!btnListarHistorial,
+        btnBuscarPaciente: !!btnBuscarPaciente,
+        btnLimpiarBusqueda: !!btnLimpiarBusqueda,
+        inpBuscarPaciente: !!inpBuscarPaciente
+    });
+    
+    if (!btnListarHistorial || !btnBuscarPaciente || !btnLimpiarBusqueda || !inpBuscarPaciente) {
+        console.error('Error: No se encontraron todos los elementos necesarios');
+        return;
     }
-});
-
-btnLimpiarBusqueda.addEventListener('click', () => {
-    inpBuscarPaciente.value = '';
+    
+    // Cargar historial al iniciar
     cargarHistorial();
-});
-
-// Buscar al presionar Enter
-inpBuscarPaciente.addEventListener('keypress', async (e) => {
-    if (e.key === 'Enter') {
+    
+    // Event listener para actualizar lista
+    btnListarHistorial.addEventListener('click', async () => {
+        console.log('Botón "Actualizar Lista" clickeado');
+        await cargarHistorial();
+    });
+    
+    // Event listener para botón de búsqueda
+    btnBuscarPaciente.addEventListener('click', async () => {
+        console.log('Botón "Buscar" clickeado');
         const nombre = inpBuscarPaciente.value.trim();
+        console.log('Nombre a buscar:', nombre);
         if (nombre) {
             await buscarPorPaciente(nombre);
+        } else {
+            alert('Por favor ingrese un nombre para buscar');
         }
-    }
+    });
+    
+    // Buscar al presionar Enter
+    inpBuscarPaciente.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            console.log('Enter presionado');
+            const nombre = inpBuscarPaciente.value.trim();
+            if (nombre) {
+                await buscarPorPaciente(nombre);
+            } else {
+                await cargarHistorial();
+            }
+        }
+    });
+    
+    // Event listener para limpiar búsqueda
+    btnLimpiarBusqueda.addEventListener('click', async () => {
+        console.log('Botón "Limpiar" clickeado');
+        inpBuscarPaciente.value = '';
+        await cargarHistorial();
+    });
 });
 
 async function cargarHistorial() {
