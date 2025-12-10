@@ -75,11 +75,11 @@ async function listarPacientes() {
             <td>${persona.nombre}</td>
             <td>${persona.apellido}</td>
             <td class="text-center">
-                <button class="btn btn-sm btnEditarPaciente me-1" style="background-color: #8DBCC7; border-color: #8DBCC7; color: #333; padding: 0.25rem 0.5rem;" data-id="${persona.id}" title="Editar">
-                    <i class="bi bi-pencil"></i>
+                <button class="btn btn-sm btn-primary btnEditarPaciente me-1" style="padding: 0.375rem 0.75rem; min-width: 38px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;" data-id="${persona.id}" title="Editar">
+                    <i class="fas fa-edit" style="font-size: 14px; display: inline-block;"></i>
                 </button>
-                <button class="btn btn-danger btn-sm btnEliminarPaciente" style="padding: 0.25rem 0.5rem;" data-id="${persona.id}" title="Eliminar">
-                    <i class="bi bi-trash"></i>
+                <button class="btn btn-danger btn-sm btnEliminarPaciente" style="padding: 0.375rem 0.75rem; min-width: 38px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;" data-id="${persona.id}" title="Eliminar">
+                    <i class="fas fa-trash" style="font-size: 14px; display: inline-block;"></i>
                 </button>
             </td>
         </tr>

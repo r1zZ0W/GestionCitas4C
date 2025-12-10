@@ -5,80 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Citas Médicas</title>
     
-    <!--Bustra -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <!-- Bustra Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.1/css/all.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="index.html">
-                Gestión de Citas Médicas
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="pacientes.html">Pacientes</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="medicos.html">Médicos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="citas.html">Citas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="historial.html">Historial</a>
-                    </li>
-                </ul>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="image.png" alt="Ithera" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
-        </div>
-    </nav>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="index.html" class="sidebar-nav-link active" title="Inicio">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="pacientes.html" class="sidebar-nav-link" title="Pacientes">
+                        <i class="fas fa-user-injured"></i>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="medicos.html" class="sidebar-nav-link" title="Médicos">
+                        <i class="fas fa-user-doctor"></i>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="citas.html" class="sidebar-nav-link" title="Citas">
+                        <i class="fas fa-calendar-check"></i>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="historial.html" class="sidebar-nav-link" title="Historial">
+                        <i class="fas fa-clock-rotate-left"></i>
+                    </a>
+                </li>
+            </ul>
+        </aside>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h1 class="mb-4">Sistema de Gestión de Citas Médicas</h1>
-                <p class="lead mb-5">Gestiona pacientes, médicos y citas de manera eficiente</p>
-            </div>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">Estás en Inicio</h1>
+                </div>
+                <div class="header-right">
+                </div>
+            </header>
 
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 text-center">
-                    <div class="card-body">
-                        <h5 class="card-title">Pacientes</h5>
-                        <p class="card-text">Gestiona el registro y consulta de pacientes</p>
-                        <a href="pacientes.html" class="btn btn-primary">Ir a Pacientes</a>
+            <!-- Content -->
+            <div class="content-wrapper">
+                <div class="page-title">Sistema de Gestión de Citas Médicas</div>
+                <p class="page-subtitle">Gestiona pacientes, médicos y citas de manera eficiente</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <i class="fas fa-user-injured" style="font-size: 48px; color: #384d5b;"></i>
+                                </div>
+                                <h5 class="card-title">Pacientes</h5>
+                                <p class="card-text">Gestiona el registro y consulta de pacientes</p>
+                                <a href="pacientes.html" class="btn btn-primary">
+                                    <i class="fas fa-arrow-right"></i>
+                                    Ir a Pacientes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <i class="fas fa-user-doctor" style="font-size: 48px; color: #a1b5bc;"></i>
+                                </div>
+                                <h5 class="card-title">Médicos</h5>
+                                <p class="card-text">Administra la información de los médicos</p>
+                                <a href="medicos.html" class="btn btn-success">
+                                    <i class="fas fa-arrow-right"></i>
+                                    Ir a Médicos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <i class="fas fa-calendar-check" style="font-size: 48px; color: #384d5b;"></i>
+                                </div>
+                                <h5 class="card-title">Citas</h5>
+                                <p class="card-text">Programa y gestiona las citas médicas</p>
+                                <a href="citas.html" class="btn btn-primary">
+                                    <i class="fas fa-arrow-right"></i>
+                                    Ir a Citas
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 text-center">
-                    <div class="card-body">
-                        <h5 class="card-title">Médicos</h5>
-                        <p class="card-text">Administra la información de los médicos</p>
-                        <a href="medicos.html" class="btn btn-success">Ir a Médicos</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 text-center">
-                    <div class="card-body">
-                        <h5 class="card-title">Citas</h5>
-                        <p class="card-text">Programa y gestiona las citas médicas</p>
-                        <a href="citas.html" class="btn" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333;">Ir a Citas</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
 
     <!-- Scripts -->

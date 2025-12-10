@@ -5,44 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Citas</title>
     
-    <!--Bustra -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <!-- Bustra Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.1/css/all.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="index.html">
-                Gestión de Citas Médicas
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="pacientes.html">Pacientes</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="medicos.html">Médicos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="citas.html">Citas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="historial.html">Historial</a>
-                    </li>
-                </ul>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="image.png" alt="Ithera" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
-        </div>
-    </nav>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="index.html" class="sidebar-nav-link" title="Inicio">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="pacientes.html" class="sidebar-nav-link" title="Pacientes">
+                        <i class="fas fa-user-injured"></i>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="medicos.html" class="sidebar-nav-link" title="Médicos">
+                        <i class="fas fa-user-doctor"></i>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="citas.html" class="sidebar-nav-link active" title="Citas">
+                        <i class="fas fa-calendar-check"></i>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="historial.html" class="sidebar-nav-link" title="Historial">
+                        <i class="fas fa-clock-rotate-left"></i>
+                    </a>
+                </li>
+            </ul>
+        </aside>
 
-    <div class="container">
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">Estás en Citas</h1>
+                </div>
+                <div class="header-right">
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content-wrapper">
         <!-- SECCIÓN DE CITAS -->
         <section id="citas-section" class="mb-5">
             <div class="card shadow-sm">
@@ -55,7 +74,10 @@
                     <!-- Formulario de Citas -->
                     <div class="row mb-4">
                         <div class="col-12">
-                            <h5 class="mb-3">Registrar Nueva Cita</h5>
+                            <h5 class="section-title">
+                                <i class="fas fa-plus-circle"></i>
+                                Registrar Nueva Cita
+                            </h5>
                             <form id="formCita">
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -102,10 +124,12 @@
                                         </select>
                                     </div>
                                     <div class="col-12">
-                                        <button type="submit" class="btn" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333;" id="btnEnviarCita">
+                                        <button type="submit" class="btn btn-primary" id="btnEnviarCita">
+                                            <i class="fas fa-save"></i>
                                             Registrar Cita
                                         </button>
                                         <button type="reset" class="btn btn-secondary">
+                                            <i class="fas fa-eraser"></i>
                                             Limpiar
                                         </button>
                                     </div>
@@ -120,9 +144,13 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Lista de Citas</h5>
-                                <button type="button" class="btn btn-sm" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333;" id="btnListarCitas">
-                                    Actualizar Lista
+                                <h5 class="section-title">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Citas Programadas
+                                </h5>
+                                <button type="button" class="btn btn-primary btn-sm" id="btnListarCitas">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Actualizar
                                 </button>
                             </div>
                             <div class="table-responsive">
@@ -153,8 +181,12 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Lista de Prioridad y Atencion</h5>
-                                <button type="button" class="btn btn-primary btn-sm" id="btnAtenderPaciente">
+                                <h5 class="section-title">
+                                    <i class="fas fa-clock"></i>
+                                    Cola de Atención por Prioridad
+                                </h5>
+                                <button type="button" class="btn btn-success btn-sm" id="btnAtenderPaciente">
+                                    <i class="fas fa-user-check"></i>
                                     Atender
                                 </button>
                             </div>
@@ -179,15 +211,20 @@
                 </div>
             </div>
         </section>
+            </div>
+        </main>
     </div>
 
     <!-- Modal para Editar Cita -->
     <div class="modal fade" id="modalEditarCita" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header text-white" style="background-color: #A4CCD9;">
-                    <h5 class="modal-title">Editar Cita</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header" style="background: var(--bg-rose); border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title" style="color: var(--text-dark);">
+                        <i class="fas fa-edit"></i>
+                        Editar Cita
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formEditarCita">
@@ -229,8 +266,14 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formEditarCita" class="btn" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333;" id="btnGuardarEdicionCita">Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" form="formEditarCita" class="btn btn-primary" id="btnGuardarEdicionCita">
+                        <i class="fas fa-save"></i>
+                        Guardar Cambios
+                    </button>
                 </div>
             </div>
         </div>

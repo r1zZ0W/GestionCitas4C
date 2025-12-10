@@ -127,17 +127,27 @@ async function finalizarConsultaYLiberarMedico(citaId, medicoId) {
 }
 
 async function cargarPacientesPrioridad() {
+    try {
+        const URL = 'http://localhost:8080/api/paciente/prioridad/asc';
+        const response = await fetch(URL, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-    const URL = 'http://localhost:8080/api/paciente/prioridad/asc';
-    const response = await fetch(URL, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
+        if (!response.ok) {
+            console.error('Error al cargar pacientes por prioridad:', response.status, response.statusText);
+            tbodyPrioridad.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-danger">Error al cargar la lista de prioridad</td>
+                </tr>
+            `;
+            return;
         }
-    });
 
-    const jsonResponse = await response.json();
-    const listaPacientes = jsonResponse.listPacientes || [];
+        const jsonResponse = await response.json();
+        const listaPacientes = jsonResponse.listPacientes || [];
 
     let htmlTable = '';
 
@@ -182,6 +192,14 @@ async function cargarPacientesPrioridad() {
     }
 
     tbodyPrioridad.innerHTML = htmlTable;
+    } catch (error) {
+        console.error('Error en cargarPacientesPrioridad:', error);
+        tbodyPrioridad.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center text-danger">Error al cargar la lista de prioridad: ${error.message}</td>
+            </tr>
+        `;
+    }
 }
 
 // Función para cargar pacientes
@@ -243,9 +261,28 @@ document.getElementById('formCita').addEventListener('submit', async (e) => {
     const pacienteData = await responsePaciente.json();
     const paciente = pacienteData.paciente;
     
-    // Asignar prioridad desde el formulario al paciente
+    // Actualizar paciente con la prioridad asignada ANTES de crear la cita
     if (selectPrioridad.value) {
-        paciente.prioridad = parseInt(selectPrioridad.value);
+        try {
+            const updateResponse = await fetch(`http://localhost:8080/api/paciente/${pacienteId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: paciente.nombre,
+                    apellido: paciente.apellido,
+                    prioridad: parseInt(selectPrioridad.value)
+                })
+            });
+            if (updateResponse.ok) {
+                const updatedPacienteData = await updateResponse.json();
+                paciente.prioridad = updatedPacienteData.paciente.prioridad;
+                console.log('Paciente actualizado con prioridad antes de crear cita');
+            }
+        } catch (error) {
+            console.error('Error al actualizar paciente antes de crear cita:', error);
+        }
     }
 
     // Obtener médico completo
@@ -277,27 +314,23 @@ document.getElementById('formCita').addEventListener('submit', async (e) => {
         body: JSON.stringify(obj)
     });
 
-    console.log(response);
+    console.log('Response status:', response.status);
 
     if (response.ok) {
+        const responseData = await response.json();
+        console.log('Cita registrada:', responseData);
         alert('Cita registrada correctamente');
         document.getElementById('formCita').reset();
-        // Actualizar paciente con la prioridad asignada
-        if (selectPrioridad.value) {
-            await fetch(`http://localhost:8080/api/paciente/${pacienteId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    nombre: paciente.nombre,
-                    apellido: paciente.apellido,
-                    prioridad: parseInt(selectPrioridad.value)
-                })
-            });
+        try {
+            await listarCitas();
+            // Esperar un poco para que el backend procese la cita
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await cargarPacientesPrioridad();
+            console.log('Listas actualizadas correctamente');
+        } catch (error) {
+            console.error('Error al actualizar listas:', error);
+            alert('Cita registrada pero hubo un error al actualizar las listas. Por favor, recarga la página.');
         }
-        await listarCitas();
-        await cargarPacientesPrioridad();
     } else {
         const error = await response.json();
         alert('Error al registrar la cita: ' + (error.error || 'Error desconocido'));
@@ -371,11 +404,11 @@ async function listarCitas() {
             <td>${motivoConsulta}</td>
             <td class="${estadoClass}">${estadoTexto}</td>
             <td class="text-center">
-                <button class="btn btn-sm btnEditarCita me-1" style="background-color: #A4CCD9; border-color: #A4CCD9; color: #333; padding: 0.25rem 0.5rem;" data-id="${cita.id}" title="Editar">
-                    <i class="bi bi-pencil"></i>
+                <button class="btn btn-sm btn-primary btnEditarCita me-1" style="padding: 0.375rem 0.75rem; min-width: 38px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;" data-id="${cita.id}" title="Editar">
+                    <i class="fas fa-edit" style="font-size: 14px; display: inline-block;"></i>
                 </button>
-                <button class="btn btn-danger btn-sm btnEliminarCita" style="padding: 0.25rem 0.5rem;" data-id="${cita.id}" title="Eliminar">
-                    <i class="bi bi-trash"></i>
+                <button class="btn btn-danger btn-sm btnEliminarCita" style="padding: 0.375rem 0.75rem; min-width: 38px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;" data-id="${cita.id}" title="Eliminar">
+                    <i class="fas fa-trash" style="font-size: 14px; display: inline-block;"></i>
                 </button>
             </td>
         </tr>
